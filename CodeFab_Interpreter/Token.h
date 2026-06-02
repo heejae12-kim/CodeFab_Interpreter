@@ -34,10 +34,10 @@ public:
         : type(type), lexeme(std::move(lexeme)), literal(std::move(literal)), line(line) {
     }
 
-    TokenType getTokenType() { return type; }
-    std::string getLexme() { return lexeme; }
-    Value getLiteral() { return literal; }
-    int getLine() { return line; }
+    TokenType getTokenType() const { return type; }
+    std::string getLexme() const { return lexeme; }
+    Value getLiteral() const { return literal; }
+    int getLine() const { return line; }
 
 private:
     TokenType   type;

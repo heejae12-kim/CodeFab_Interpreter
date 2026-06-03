@@ -11,3 +11,15 @@
 6) [Feature] Create test cases for kiwer , PR 생성시 Title 준수하기
 7) PR단위는 100 line이하 지향하자.
 8) Build pass / Unit Test 확인 후 PR 생성
+---
+
+## 코드리뷰 전략
+1) Merge된 코드에 대해서는 과거로 돌아가는 rebase하지 않는다.
+2) PR comment시 전체 변경 사항을 체크하고 칭찬 + 리뷰내용 + 요청사항 입력하기.
+3) 의미있는 단위로 Commit 하기, 
+ - 첫 개발단계에서는 class 단위로 commit 지향
+ - Interface와 같은 공통 변경점은 회의 후 결정
+4) Class 작성 시 
+ - Header 파일에 define
+ - Cpp파일에서 implementation 
+---

@@ -144,6 +144,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Lexer.cpp" />
+    <ClCompile Include="CheckerUnit\CheckerUnit.cpp" />
+    <ClCompile Include="CheckerUnit\UnitTest\CheckerUnitTest.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="test_lexer.cpp" />
     <ClCompile Include="Parser.cpp" />
@@ -155,6 +157,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CheckerUnit\CheckerUnit.h" />
     <ClInclude Include="Expr.h" />
     <ClInclude Include="Lexer.h" />
     <ClInclude Include="Parser.h" />

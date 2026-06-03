@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="소스 파일\CheckerUnit">
+      <UniqueIdentifier>{8ca9faf9-1583-4b00-afd4-d899b7f6ea76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\CheckerUnit\UnitTest">
+      <UniqueIdentifier>{a6f8e628-cb9c-4cb5-bb14-777d958de1d9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Lexer.cpp">
@@ -23,6 +29,18 @@
     </ClCompile>
     <ClCompile Include="test_lexer.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\lib\native\src\gtest\gtest-all.cc">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\lib\native\src\gmock\gmock-all.cc">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="CheckerUnit\CheckerUnit.cpp">
+      <Filter>소스 파일\CheckerUnit</Filter>
+    </ClCompile>
+    <ClCompile Include="CheckerUnit\UnitTest\CheckerUnitTest.cpp">
+      <Filter>소스 파일\CheckerUnit\UnitTest</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -40,6 +58,9 @@
     </ClInclude>
     <ClInclude Include="Token.h">
       <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="CheckerUnit\CheckerUnit.h">
+      <Filter>소스 파일\CheckerUnit</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

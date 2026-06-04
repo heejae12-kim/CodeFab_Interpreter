@@ -17,18 +17,18 @@ class AssignExpr;
 
 // ── Visitor interface ──────────────────────────────────────────────────────────
 interface ExprVisitor{
-    virtual Value visitLiteralExpr(LiteralExpr & expr) = 0;
-    virtual Value visitUnaryExpr(UnaryExpr& expr) = 0;
-    virtual Value visitBinaryExpr(BinaryExpr& expr) = 0;
-    virtual Value visitGroupingExpr(GroupingExpr& expr) = 0;
-    virtual Value visitVariableExpr(VariableExpr& expr) = 0;
-    virtual Value visitAssignExpr(AssignExpr& expr) = 0;
+    virtual ValuableValue visitLiteralExpr(LiteralExpr & expr) = 0;
+    virtual ValuableValue visitUnaryExpr(UnaryExpr& expr) = 0;
+    virtual ValuableValue visitBinaryExpr(BinaryExpr& expr) = 0;
+    virtual ValuableValue visitGroupingExpr(GroupingExpr& expr) = 0;
+    virtual ValuableValue visitVariableExpr(VariableExpr& expr) = 0;
+    virtual ValuableValue visitAssignExpr(AssignExpr& expr) = 0;
     virtual ~ExprVisitor() = default;
 };
 
 // ── Base Expression Node ───────────────────────────────────────────────────────
 interface Expr{
-    virtual Value accept(ExprVisitor & visitor) = 0;
+    virtual ValuableValue accept(ExprVisitor & visitor) = 0;
     virtual ~Expr() = default;
 };
 using ExprPtr = std::unique_ptr<Expr>;
@@ -38,20 +38,20 @@ using ExprPtr = std::unique_ptr<Expr>;
 // 숫자, 문자열, bool, nil 리터럴
 class LiteralExpr : public Expr {
 public:
-    explicit LiteralExpr(Value v) : value(std::move(v)) {}
-    Value accept(ExprVisitor& v) override { return v.visitLiteralExpr(*this); }
+    explicit LiteralExpr(ValuableValue v) : value(std::move(v)) {}
+    ValuableValue accept(ExprVisitor& v) override { return v.visitLiteralExpr(*this); }
 
-    const Value& getValue() const { return value; }
+    const ValuableValue& getValue() const { return value; }
 
 private:
-    Value value;
+    ValuableValue value;
 };
 
 // 단항 연산자: -expr
 class UnaryExpr : public Expr {
 public:
     UnaryExpr(Token op, ExprPtr right) : op(std::move(op)), right(std::move(right)) {}
-    Value accept(ExprVisitor& v) override { return v.visitUnaryExpr(*this); }
+    ValuableValue accept(ExprVisitor& v) override { return v.visitUnaryExpr(*this); }
 
     const Token& getOp()    const { return op; }
     const ExprPtr& getRight() const { return right; }
@@ -67,7 +67,7 @@ public:
     BinaryExpr(ExprPtr l, Token op, ExprPtr r)
         : left(std::move(l)), op(std::move(op)), right(std::move(r)) {
     }
-    Value accept(ExprVisitor& v) override { return v.visitBinaryExpr(*this); }
+    ValuableValue accept(ExprVisitor& v) override { return v.visitBinaryExpr(*this); }
 
     const ExprPtr& getLeft()  const { return left; }
     const Token& getOp()    const { return op; }
@@ -83,7 +83,7 @@ private:
 class GroupingExpr : public Expr {
 public:
     explicit GroupingExpr(ExprPtr expr) : expression(std::move(expr)) {}
-    Value accept(ExprVisitor& v) override { return v.visitGroupingExpr(*this); }
+    ValuableValue accept(ExprVisitor& v) override { return v.visitGroupingExpr(*this); }
 
     const ExprPtr& getExpression() const { return expression; }
 
@@ -95,7 +95,7 @@ private:
 class VariableExpr : public Expr {
 public:
     explicit VariableExpr(Token name) : name(std::move(name)) {}
-    Value accept(ExprVisitor& v) override { return v.visitVariableExpr(*this); }
+    ValuableValue accept(ExprVisitor& v) override { return v.visitVariableExpr(*this); }
 
     const Token& getName() const { return name; }
 
@@ -107,7 +107,7 @@ private:
 class AssignExpr : public Expr {
 public:
     AssignExpr(Token name, ExprPtr val) : name(std::move(name)), value(std::move(val)) {}
-    Value accept(ExprVisitor& v) override { return v.visitAssignExpr(*this); }
+    ValuableValue accept(ExprVisitor& v) override { return v.visitAssignExpr(*this); }
 
     const Token& getName()  const { return name; }
     const ExprPtr& getValue() const { return value; }

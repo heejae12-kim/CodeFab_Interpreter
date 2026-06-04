@@ -26,22 +26,22 @@ enum class TokenType {
 };
 
 // Runtime value type: number, string, bool, or nil
-using Value = std::variant<double, std::string, bool, std::nullptr_t>;
+using ValuableValue = std::variant<double, std::string, bool, std::nullptr_t>;
 
 class Token {
 public:
-    Token(TokenType type, std::string lexeme, Value literal, int line)
+    Token(TokenType type, std::string lexeme, ValuableValue literal, int line)
         : type(type), lexeme(std::move(lexeme)), literal(std::move(literal)), line(line) {
     }
 
     TokenType getTokenType() const { return type; }
     std::string getLexme() const { return lexeme; }
-    Value getLiteral() const { return literal; }
+    ValuableValue getLiteral() const { return literal; }
     int getLine() const { return line; }
 
 private:
     TokenType   type;
     std::string lexeme;
-    Value       literal;
+    ValuableValue       literal;
     int         line;
 };

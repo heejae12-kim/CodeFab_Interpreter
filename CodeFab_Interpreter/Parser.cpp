@@ -26,8 +26,17 @@ StmtPtr Parser::varDeclaration() {
     return std::make_unique<VarStmt>(std::move(name), std::move(init));
 }
 StmtPtr Parser::statement() {
+    if (match({ TokenType::PRINT }))
+        return printStatement();
     return expressionStatement();
 }
+
+StmtPtr Parser::printStatement() {
+    ExprPtr value = expression();
+    consume(TokenType::SEMICOLON);
+    return std::make_unique<PrintStmt>(std::move(value));
+}
+
 
 StmtPtr Parser::expressionStatement() {
     ExprPtr expr = expression();
@@ -37,6 +46,17 @@ StmtPtr Parser::expressionStatement() {
 
 ExprPtr Parser::expression() {
     return assignment();
+}
+
+ExprPtr Parser::addition() {
+    ExprPtr expr = primary();
+    while (match({ TokenType::PLUS, TokenType::MINUS }))
+    {
+        Token op = previous();
+        ExprPtr right = primary();
+        expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(right));
+    }
+    return expr;
 }
 
 ExprPtr Parser::primary() {

@@ -20,7 +20,6 @@ private:
 	StmtPtr ifStatement();
 	StmtPtr blockStatement();
 
-
 	ExprPtr expression();
 	ExprPtr comparison();
 	ExprPtr addition();

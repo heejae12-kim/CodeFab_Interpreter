@@ -473,3 +473,51 @@ TEST(ParserTest, ForStatement) {
         stmts[1]->accept(mock);
     }
 }
+
+TEST(ParserTest, StringVarAndPrint) {
+    std::vector<Token> tokens = {
+        // var str = "abdc";
+        Token(TokenType::VAR,        "var",  nullptr, 1),
+        Token(TokenType::IDENTIFIER, "str",  nullptr, 1),
+        Token(TokenType::EQUAL,      "=",    nullptr, 1),
+        Token(TokenType::STRING,     "abdc", std::string("abdc"), 1),
+        Token(TokenType::SEMICOLON,  ";",    nullptr,  1),
+        // print str;
+        Token(TokenType::PRINT,      "print",       nullptr, 2),
+        Token(TokenType::IDENTIFIER, "str",   nullptr,2),
+        Token(TokenType::SEMICOLON,  ";",     nullptr, 2),
+        Token(TokenType::EOF_TOKEN,  "",      nullptr, 2),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 2u);
+
+    // var str = "abdc";
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "str");
+            auto* lit = dynamic_cast<LiteralExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(lit, nullptr);
+            ASSERT_TRUE(std::holds_alternative<std::string>(lit->getValue()));
+
+            EXPECT_EQ(std::get<std::string>(lit->getValue()), "abdc");
+            });
+        stmts[0]->accept(mock);
+    }
+
+    // print str;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitPrintStmt(testing::_))
+            .WillOnce([](PrintStmt& stmt) {
+            auto* var = dynamic_cast<VariableExpr*>(stmt.getExpression().get());
+            ASSERT_NE(var, nullptr);
+            EXPECT_EQ(var->getName().getLexme(), "str");
+            });
+        stmts[1]->accept(mock);
+    }
+}

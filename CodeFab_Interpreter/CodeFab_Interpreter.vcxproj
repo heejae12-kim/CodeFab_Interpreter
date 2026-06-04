@@ -155,6 +155,8 @@
     <ClCompile Include="ParserTest.cpp">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'"> %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <ClCompile Include="Environment.cpp" />
+    <ClCompile Include="EnvironmentTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -167,6 +169,8 @@
     <ClInclude Include="Parser.h" />
     <ClInclude Include="Stmt.h" />
     <ClInclude Include="Token.h" />
+    <ClInclude Include="Environment.h" />
+    <ClInclude Include="TestHelpers.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

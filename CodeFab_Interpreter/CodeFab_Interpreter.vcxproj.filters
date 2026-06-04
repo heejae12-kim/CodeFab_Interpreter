@@ -15,7 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Lexer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
     <ClCompile Include="main.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="test_lexer.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -23,13 +29,16 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Token.h">
+    <ClInclude Include="Expr.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Lexer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Stmt.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Expr.h">
+    <ClInclude Include="Token.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

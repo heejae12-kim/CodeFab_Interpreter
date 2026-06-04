@@ -159,6 +159,7 @@
     <ClCompile Include="EnvironmentTest.cpp" />
     <ClCompile Include="Interpreter.cpp" />
     <ClCompile Include="InterpreterTest.cpp" />
+    <ClCompile Include="InterpreterStmtTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

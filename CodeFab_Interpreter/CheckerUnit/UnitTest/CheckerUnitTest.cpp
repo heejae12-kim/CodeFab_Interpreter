@@ -22,6 +22,9 @@ protected:
 	ExprPtr numLiteral(double value) {
 		return std::make_unique<LiteralExpr>(value);
 	}
+	ExprPtr stringLiteral(string str) {
+		return std::make_unique<LiteralExpr>(str);
+	}
 	StmtPtr valueDeclaration(const std::string& name, ExprPtr init = nullptr, int line = 1) {
 		return std::make_unique<VarStmt>(makeIndentifier(name, line), std::move(init));
 	}
@@ -90,6 +93,6 @@ TEST_F(CheckerUnitFixture, PrintNumberLiteral) {
 
 TEST_F(CheckerUnitFixture, PrintStringLiteral) {
 	// print "hello";
-	statement_vector.push_back(std::make_unique<PrintStmt>(std::make_unique<LiteralExpr>("hello")));
+	statement_vector.push_back(std::make_unique<PrintStmt>(stringLiteral("hello")));
 	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
 }

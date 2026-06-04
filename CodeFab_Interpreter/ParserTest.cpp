@@ -3,18 +3,12 @@
 
 class MockStmtVisitor : public StmtVisitor {
 public:
-    MOCK_METHOD(void, visitPrintStmt, (PrintStmt&),
-        (override));
-    MOCK_METHOD(void, visitExprStmt, (ExprStmt&),
-        (override));
-    MOCK_METHOD(void, visitVarStmt, (VarStmt&),
-        (override));
-    MOCK_METHOD(void, visitBlockStmt, (BlockStmt&),
-        (override));
-    MOCK_METHOD(void, visitIfStmt, (IfStmt&),
-        (override));
-    MOCK_METHOD(void, visitForStmt, (ForStmt&),
-        (override));
+    MOCK_METHOD(void, visitPrintStmt, (PrintStmt&), (override));
+    MOCK_METHOD(void, visitExprStmt, (ExprStmt&), (override));
+    MOCK_METHOD(void, visitVarStmt, (VarStmt&), (override));
+    MOCK_METHOD(void, visitBlockStmt, (BlockStmt&), (override));
+    MOCK_METHOD(void, visitIfStmt, (IfStmt&), (override));
+    MOCK_METHOD(void, visitForStmt, (ForStmt&), (override));
 };
 
 TEST(ParserTest, VarDeclaration) {
@@ -80,4 +74,113 @@ TEST(ParserTest, PrintAddition) {
         });
 
     stmts[0]->accept(mock);
+}
+
+TEST(ParserTest, MultipleVarAndPrint) {
+    std::vector<Token> tokens = {
+        // var a = 10;
+        Token(TokenType::VAR,        "var",   nullptr, 1),
+        Token(TokenType::IDENTIFIER, "a",     nullptr, 1),
+        Token(TokenType::EQUAL,      "=",     nullptr, 1),
+        Token(TokenType::NUMBER,     "10",    10.0, 1),
+        Token(TokenType::SEMICOLON,  ";",     nullptr, 1),
+// var b = 3 * 6;
+        Token(TokenType::VAR,        "var",   nullptr, 2),
+        Token(TokenType::IDENTIFIER, "b",     nullptr, 2),
+        Token(TokenType::EQUAL,      "=",     nullptr, 2),
+        Token(TokenType::NUMBER,     "3",     3.0, 2),
+        Token(TokenType::STAR,       "*",     nullptr, 2),
+        Token(TokenType::NUMBER,     "6",     6.0, 2),
+        Token(TokenType::SEMICOLON,  ";",     nullptr, 2),
+// var c = 5 / 2;
+        Token(TokenType::VAR,        "var",   nullptr, 3),
+        Token(TokenType::IDENTIFIER, "c",     nullptr, 3),
+        Token(TokenType::EQUAL,      "=",     nullptr, 3),
+        Token(TokenType::NUMBER,     "5",     5.0, 3),
+        Token(TokenType::SLASH,      "/",     nullptr, 3),
+        Token(TokenType::NUMBER,     "2",     2.0, 3),
+        Token(TokenType::SEMICOLON,  ";",     nullptr, 3),
+// print b - c;
+        Token(TokenType::PRINT,      "print", nullptr, 4),
+        Token(TokenType::IDENTIFIER, "b",     nullptr, 4),
+        Token(TokenType::MINUS,      "-",     nullptr, 4),
+        Token(TokenType::IDENTIFIER, "c",     nullptr, 4),
+        Token(TokenType::SEMICOLON,  ";",     nullptr, 4),
+        Token(TokenType::EOF_TOKEN,  "",      nullptr, 4),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 4u);
+
+    // var a = 10;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "a");
+            auto* lit = dynamic_cast<LiteralExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(lit, nullptr);
+
+            EXPECT_DOUBLE_EQ(std::get<double>(lit->getValue()), 10.0);
+            });
+        stmts[0]->accept(mock);
+    }
+
+    // var b = 3 * 6;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "b");
+            auto* bin = dynamic_cast<BinaryExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(bin, nullptr);
+            EXPECT_EQ(bin->getOp().getTokenType(), TokenType::STAR);
+            auto* left = dynamic_cast<LiteralExpr*>(bin->getLeft().get());
+            auto* right = dynamic_cast<LiteralExpr*>(bin->getRight().get());
+
+            EXPECT_DOUBLE_EQ(std::get<double>(left->getValue()), 3.0);
+
+            EXPECT_DOUBLE_EQ(std::get<double>(right->getValue()), 6.0);
+            });
+        stmts[1]->accept(mock);
+    }
+
+    // var c = 5 / 2;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "c");
+            auto* bin = dynamic_cast<BinaryExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(bin, nullptr);
+            EXPECT_EQ(bin->getOp().getTokenType(), TokenType::SLASH);
+            auto* left = dynamic_cast<LiteralExpr*>(bin->getLeft().get());
+            auto* right = dynamic_cast<LiteralExpr*>(bin->getRight().get());
+
+            EXPECT_DOUBLE_EQ(std::get<double>(left->getValue()), 5.0);
+
+            EXPECT_DOUBLE_EQ(std::get<double>(right->getValue()), 2.0);
+            });
+        stmts[2]->accept(mock);
+    }
+
+    // print b - c;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitPrintStmt(testing::_))
+            .WillOnce([](PrintStmt& stmt) {
+            auto* bin = dynamic_cast<BinaryExpr*>(stmt.getExpression().get());
+            ASSERT_NE(bin, nullptr);
+            EXPECT_EQ(bin->getOp().getTokenType(), TokenType::MINUS);
+            auto* left = dynamic_cast<VariableExpr*>(bin->getLeft().get());
+            auto* right = dynamic_cast<VariableExpr*>(bin->getRight().get());
+            ASSERT_NE(left, nullptr);
+            ASSERT_NE(right, nullptr);
+            EXPECT_EQ(left->getName().getLexme(), "b");
+            EXPECT_EQ(right->getName().getLexme(), "c");
+            });
+        stmts[3]->accept(mock);
+    }
 }

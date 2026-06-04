@@ -48,16 +48,20 @@ ExprPtr Parser::expression() {
 }
 
 ExprPtr Parser::addition() {
-    ExprPtr expr = primary();
-
-    // 하드코딩: * / 를 multiplication() 없이 직접 처리
-    while (tokens_[current].getTokenType() == TokenType::STAR || tokens_[current].getTokenType() == TokenType::SLASH) {
-        Token op = tokens_[current++];
-        ExprPtr rhs = primary();
+    ExprPtr expr = multiplication();
+    while (match({ TokenType::PLUS, TokenType::MINUS }))
+    {
+        Token op = previous();
+        ExprPtr rhs = multiplication();
         expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(rhs));
     }
+    return expr;
 
-    while (match({ TokenType::PLUS, TokenType::MINUS }))
+}
+
+ExprPtr Parser::multiplication() {
+    ExprPtr expr = primary();
+    while (match({ TokenType::STAR, TokenType::SLASH }))
     {
         Token op = previous();
         ExprPtr rhs = primary();
@@ -65,6 +69,7 @@ ExprPtr Parser::addition() {
     }
     return expr;
 }
+
 
 ExprPtr Parser::primary() {
     if (check(TokenType::NUMBER)) {

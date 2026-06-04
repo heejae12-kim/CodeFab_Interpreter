@@ -50,11 +50,20 @@ ValuableValue CheckerUnit::visitGroupingExpr(GroupingExpr& expr) {
 }
 
 ValuableValue CheckerUnit::visitVariableExpr(VariableExpr& expr) {
+	if (!check_values_in_scopes_vector.empty()) {
+		auto& inner_most_scope = check_values_in_scopes_vector.back();
+		auto iterator_value_in_scope = inner_most_scope.find(expr.getName().getLexme());
+
+		if (iterator_value_in_scope != inner_most_scope.end() && !iterator_value_in_scope->second)
+			throw CheckerError("[line " + std::to_string(expr.getName().getLine()) +
+				"] Checker Error: Can't read local variable in its own initializer.");
+	}
 	return nullptr;
 }
 
 ValuableValue CheckerUnit::visitAssignExpr(AssignExpr& expr) {
-	return {};
+	checkExpression(*expr.getValue());
+	return nullptr;
 }
 
 

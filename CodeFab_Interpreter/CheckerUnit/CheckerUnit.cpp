@@ -1,6 +1,6 @@
 #include "CheckerUnit.h"
 
-void CheckerUnit::DoChecker(vector<StmtPtr>& statements_tree_vector) {
+void CheckerUnit::doChecker(vector<StmtPtr>& statements_tree_vector) {
 	checkBlcok(statements_tree_vector);
 }
 

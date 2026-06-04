@@ -14,7 +14,7 @@ class CheckerUnit:
 	,public StmtVisitor
 {
 public:
-	void DoChecker(vector<StmtPtr>& statements_tree_vector);
+	void doChecker(vector<StmtPtr>& statements_tree_vector);
 
 private:
     void checkBlcok(const std::vector<StmtPtr>& statements_tree_vector);

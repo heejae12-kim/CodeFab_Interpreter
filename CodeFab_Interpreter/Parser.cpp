@@ -43,8 +43,9 @@ StmtPtr Parser::ifStatement() {
     ExprPtr cond = comparison();
     consume(TokenType::RIGHT_PAREN);
     StmtPtr thenBranch = statement();
-    return std::make_unique<IfStmt>(std::move(cond), std::move(thenBranch),
-        nullptr);
+    StmtPtr elseBranch;
+    if (match({ TokenType::ELSE })) elseBranch = statement();
+    return std::make_unique<IfStmt>(std::move(cond), std::move(thenBranch), std::move(elseBranch));
 }
 
 StmtPtr Parser::blockStatement() {

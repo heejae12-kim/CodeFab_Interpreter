@@ -81,3 +81,15 @@ TEST_F(CheckerUnitFixture, DeclareSameNameInNestedScopes) {
 
 	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
 }
+
+TEST_F(CheckerUnitFixture, PrintNumberLiteral) {
+	// print 3.14;
+	statement_vector.push_back(std::make_unique<PrintStmt>(numLiteral(3.14)));
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}
+
+TEST_F(CheckerUnitFixture, PrintStringLiteral) {
+	// print "hello";
+	statement_vector.push_back(std::make_unique<PrintStmt>(std::make_unique<LiteralExpr>("hello")));
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}

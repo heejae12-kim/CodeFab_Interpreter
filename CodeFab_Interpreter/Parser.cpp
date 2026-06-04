@@ -174,6 +174,6 @@ bool Parser::match(std::initializer_list<TokenType>
 Token Parser::consume(TokenType type)
 {
     if (check(type)) return advance();
-    return peek();
+    throw ParseError("[line " + std::to_string(peek().getLine()) + "] Syntax Error at '" + peek().getLexme() + "': unexpected token");
 }
 

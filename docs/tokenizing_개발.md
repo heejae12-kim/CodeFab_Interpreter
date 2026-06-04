@@ -16,6 +16,7 @@
 - [세션 006 — Lexer GREEN 단계 구현 (2026-06-04)](#세션-006--lexer-green-단계-구현-2026-06-04)
 - [세션 007 — Pull Request 준비 및 push (2026-06-04)](#세션-007--pull-request-준비-및-push-2026-06-04)
 - [세션 008 — Code Convention 정립 (2026-06-04)](#세션-008--code-convention-정립-2026-06-04)
+- [세션 009 — Lexer REFACTOR 단계 (2026-06-04)](#세션-009--lexer-refactor-단계-2026-06-04)
 
 ---
 
@@ -420,6 +421,115 @@ REFACTOR 단계 또는 Parser TDD RED 단계 진입.
 [RED]      ✅ TC-LEX-001~020 작성 완료
 [GREEN]    ✅ TC-LEX-001~020 전부 통과 (20/20)
 [REFACTOR] ✅ 컨벤션 전체 준수 확인 완료
+```
+
+### 다음 세션 목표
+Parser TDD RED 단계 진입 — `test_parser.cpp` 작성.
+
+---
+
+## 세션 009 — Lexer REFACTOR 단계 (2026-06-04)
+
+### 커밋
+```
+(진행 중)
+```
+
+### 사용자 프롬프트 원문
+```
+@CodeFab_Interpreter/Lexer.cpp 의 118 라인의 it 변수를 token type을 찾는다는 의미를 조금 더 넣는 쪽으로 변경해줘.
+@CodeFab_Interpreter/test_lexer.cpp 에서 class LexerTest 를 fixture 라는 것을 더 명확하게 하기 위해서 이름을 바꾸려고 해. LexerTestFixture 라고 하면 어떨까 하는데 네 의견도 주고, 의견이 일치한다면 수정 진행해줘
+@CodeFab_Interpreter/Lexer.cpp 의 line 39 에 '\0' 을 const 변수로 선언해서 사용해줘
+Lexer class 내에 선언해서 사용해줘
+null_char 를 NULL_CHARACTER 라는 이름으로 변경해줘
+@CodeFab_Interpreter/Lexer.h 에 addToken() 함수를 다형성을 이용해서 하나의 함수로 합쳐줘
+@CodeFab_Interpreter/Lexer.cpp 61라인에서 65라인을 하나의 함수로 추출해줘
+지금까지 작업한 것을 빌드 및 unit test 진행해줘
+```
+
+### 주목적
+TDD REFACTOR 단계 — 가독성·설계 개선을 목적으로 Lexer 코드를 정리한다. 기능 변경 없이 20개 테스트가 모두 통과하는 상태를 유지한다.
+
+### 변경 파일
+| 파일 | 변경 유형 | 내용 |
+|------|-----------|------|
+| `CodeFab_Interpreter/Lexer.h` | 수정 | `NULL_CHARACTER` 상수 추가, `addToken()` 단일 선언으로 통합, `scanSlashOrComment()` 선언 추가 |
+| `CodeFab_Interpreter/Lexer.cpp` | 수정 | 4가지 리팩터링 적용 (아래 상세) |
+| `CodeFab_Interpreter/test_lexer.cpp` | 수정 | `LexerTest` → `LexerTestFixture` 클래스명 변경 |
+
+### 리팩터링 상세
+
+#### 1. `it` → `found_token` (Lexer.cpp)
+```cpp
+// Before
+auto it = keywords.find(text);
+if (it == keywords.end()) { ... }
+TokenType type = it->second;
+
+// After
+auto found_token = keywords.find(text);
+if (found_token == keywords.end()) { ... }
+TokenType type = found_token->second;
+```
+> 이유: 반복자 이름에 역할(키워드 타입 탐색 결과)을 명시
+
+#### 2. `NULL_CHARACTER` 상수 (Lexer.h + Lexer.cpp)
+```cpp
+// Lexer.h private 섹션
+static constexpr char NULL_CHARACTER = '\0';
+
+// peek(), peekNext()에서 매직 문자 대신 사용
+return isAtEnd() ? NULL_CHARACTER : source_[current_];
+```
+> 이유: `'\0'` 매직 문자를 이름 있는 상수로 교체하여 의미 명확화
+
+#### 3. `addToken()` 오버로드 통합 (Lexer.h + Lexer.cpp)
+```cpp
+// Before — 2개 선언
+void addToken(TokenType type);
+void addToken(TokenType type, ValuableValue literal);
+
+// After — 기본 인수로 1개 선언
+void addToken(TokenType type, ValuableValue literal = nullptr);
+```
+> 이유: 위임만 하는 오버로드를 제거, 기본 인수로 동일 동작 유지
+
+#### 4. `scanSlashOrComment()` 함수 추출 (Lexer.h + Lexer.cpp)
+```cpp
+// scanToken()의 case '/' 블록을 별도 메서드로 추출
+void Lexer::scanSlashOrComment() {
+    if (match('/')) {
+        while (!isAtEnd() && peek() != '\n') advance();
+    } else {
+        addToken(TokenType::SLASH);
+    }
+}
+```
+> 이유: `scanToken()` switch 블록의 복잡도 감소, scan계열 메서드 일관성 확보
+
+#### 5. `LexerTestFixture` 클래스명 변경 (test_lexer.cpp)
+```cpp
+// Before
+class LexerTest : public Test { ... };
+TEST_F(LexerTest, TC_LEX_001_EmptyInput) { ... }
+
+// After
+class LexerTestFixture : public Test { ... };
+TEST_F(LexerTestFixture, TC_LEX_001_EmptyInput) { ... }
+```
+> 이유: Google Test에 익숙하지 않은 팀원도 클래스 이름만으로 Fixture 패턴임을 인식 가능
+
+### 테스트 결과
+```
+[==========] Running 20 tests from 1 test suite.
+[  PASSED  ] 20 tests.
+```
+
+### 현재 TDD 단계
+```
+[RED]      ✅ TC-LEX-001~020 작성 완료
+[GREEN]    ✅ TC-LEX-001~020 전부 통과 (20/20)
+[REFACTOR] ✅ 가독성·설계 개선 완료, 20/20 PASSED 유지
 ```
 
 ### 다음 세션 목표

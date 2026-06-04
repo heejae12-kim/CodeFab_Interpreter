@@ -5,7 +5,7 @@ using namespace testing;
 
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 
-class LexerTest : public Test {
+class LexerTestFixture : public Test {
 protected:
     std::vector<Token> tokenize(const std::string& src) {
         return Lexer(src).tokenize();
@@ -24,21 +24,21 @@ protected:
 };
 
 // ── TC-LEX-001: 빈 입력 ───────────────────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_001_EmptyInput) {
+TEST_F(LexerTestFixture, TC_LEX_001_EmptyInput) {
     auto tokens = tokenize("");
     ASSERT_EQ(tokens.size(), 1u);
     EXPECT_EQ(tokens[0].getTokenType(), TokenType::EOF_TOKEN);
 }
 
 // ── TC-LEX-002: 공백·탭·개행 무시 ─────────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_002_WhitespaceIgnored) {
+TEST_F(LexerTestFixture, TC_LEX_002_WhitespaceIgnored) {
     auto tokens = tokenize("   \t\n  ");
     ASSERT_EQ(tokens.size(), 1u);
     EXPECT_EQ(tokens[0].getTokenType(), TokenType::EOF_TOKEN);
 }
 
 // ── TC-LEX-003: 단일 문자 토큰 ───────────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_003_SingleCharTokens) {
+TEST_F(LexerTestFixture, TC_LEX_003_SingleCharTokens) {
     auto result = types("( ) { } ; + - * /");
     EXPECT_THAT(result, ElementsAre(
         TokenType::LEFT_PAREN,
@@ -54,7 +54,7 @@ TEST_F(LexerTest, TC_LEX_003_SingleCharTokens) {
 }
 
 // ── TC-LEX-004: 비교·대입 연산자 ─────────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_004_ComparisonAndAssignOperators) {
+TEST_F(LexerTestFixture, TC_LEX_004_ComparisonAndAssignOperators) {
     auto result = types("< <= > >= == != =");
     EXPECT_THAT(result, ElementsAre(
         TokenType::LESS,
@@ -68,7 +68,7 @@ TEST_F(LexerTest, TC_LEX_004_ComparisonAndAssignOperators) {
 }
 
 // ── TC-LEX-005: 정수 NUMBER 리터럴 ───────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_005_IntegerNumber) {
+TEST_F(LexerTestFixture, TC_LEX_005_IntegerNumber) {
     auto tokens = tokenize("42");
     ASSERT_GE(tokens.size(), 1u);
     EXPECT_EQ(tokens[0].getTokenType(), TokenType::NUMBER);
@@ -77,7 +77,7 @@ TEST_F(LexerTest, TC_LEX_005_IntegerNumber) {
 }
 
 // ── TC-LEX-006: 소수 NUMBER 리터럴 ───────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_006_FloatNumber) {
+TEST_F(LexerTestFixture, TC_LEX_006_FloatNumber) {
     auto tokens = tokenize("3.14");
     ASSERT_GE(tokens.size(), 1u);
     EXPECT_EQ(tokens[0].getTokenType(), TokenType::NUMBER);
@@ -86,7 +86,7 @@ TEST_F(LexerTest, TC_LEX_006_FloatNumber) {
 }
 
 // ── TC-LEX-007: STRING 리터럴 ─────────────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_007_StringLiteral) {
+TEST_F(LexerTestFixture, TC_LEX_007_StringLiteral) {
     auto tokens = tokenize("\"hello world\"");
     ASSERT_GE(tokens.size(), 1u);
     EXPECT_EQ(tokens[0].getTokenType(), TokenType::STRING);
@@ -95,7 +95,7 @@ TEST_F(LexerTest, TC_LEX_007_StringLiteral) {
 }
 
 // ── TC-LEX-008: 빈 문자열 ─────────────────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_008_EmptyString) {
+TEST_F(LexerTestFixture, TC_LEX_008_EmptyString) {
     auto tokens = tokenize("\"\"");
     ASSERT_GE(tokens.size(), 1u);
     EXPECT_EQ(tokens[0].getTokenType(), TokenType::STRING);
@@ -103,7 +103,7 @@ TEST_F(LexerTest, TC_LEX_008_EmptyString) {
 }
 
 // ── TC-LEX-009: 키워드 ────────────────────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_009_Keywords) {
+TEST_F(LexerTestFixture, TC_LEX_009_Keywords) {
     auto result = types("var if else for print true false");
     EXPECT_THAT(result, ElementsAre(
         TokenType::VAR,
@@ -117,7 +117,7 @@ TEST_F(LexerTest, TC_LEX_009_Keywords) {
 }
 
 // ── TC-LEX-010: IDENTIFIER ────────────────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_010_Identifier) {
+TEST_F(LexerTestFixture, TC_LEX_010_Identifier) {
     auto tokens = tokenize("myVar");
     ASSERT_GE(tokens.size(), 1u);
     EXPECT_EQ(tokens[0].getTokenType(), TokenType::IDENTIFIER);
@@ -126,26 +126,26 @@ TEST_F(LexerTest, TC_LEX_010_Identifier) {
 
 // ── TC-LEX-011: 키워드 접두사를 가진 식별자 ──────────────────────────────────
 // "ifx", "var2", "printme" 는 키워드가 아닌 IDENTIFIER 여야 한다
-TEST_F(LexerTest, TC_LEX_011_IdentifierWithKeywordPrefix) {
+TEST_F(LexerTestFixture, TC_LEX_011_IdentifierWithKeywordPrefix) {
     auto result = types("ifx var2 printme");
     EXPECT_THAT(result, Each(TokenType::IDENTIFIER));
 }
 
 // ── TC-LEX-012: 단행 주석 제거 ───────────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_012_LineCommentIgnored) {
+TEST_F(LexerTestFixture, TC_LEX_012_LineCommentIgnored) {
     auto result = types("+ // this is a comment\n-");
     EXPECT_THAT(result, ElementsAre(TokenType::PLUS, TokenType::MINUS));
 }
 
 // ── TC-LEX-013: 주석만 있는 경우 ─────────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_013_OnlyComment) {
+TEST_F(LexerTestFixture, TC_LEX_013_OnlyComment) {
     auto tokens = tokenize("// entire line is a comment");
     ASSERT_EQ(tokens.size(), 1u);
     EXPECT_EQ(tokens[0].getTokenType(), TokenType::EOF_TOKEN);
 }
 
 // ── TC-LEX-014: 줄번호 추적 ──────────────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_014_LineTracking) {
+TEST_F(LexerTestFixture, TC_LEX_014_LineTracking) {
     auto tokens = tokenize("var\nx");
     ASSERT_GE(tokens.size(), 2u);
     EXPECT_EQ(tokens[0].getLine(), 1);  // var → 1번째 줄
@@ -153,17 +153,17 @@ TEST_F(LexerTest, TC_LEX_014_LineTracking) {
 }
 
 // ── TC-LEX-015: 닫히지 않은 문자열 → LexError ────────────────────────────────
-TEST_F(LexerTest, TC_LEX_015_UnterminatedString) {
+TEST_F(LexerTestFixture, TC_LEX_015_UnterminatedString) {
     EXPECT_THROW(tokenize("\"hello"), LexError);
 }
 
 // ── TC-LEX-016: 알 수 없는 문자 → LexError ───────────────────────────────────
-TEST_F(LexerTest, TC_LEX_016_UnknownCharacter) {
+TEST_F(LexerTestFixture, TC_LEX_016_UnknownCharacter) {
     EXPECT_THROW(tokenize("@"), LexError);
 }
 
 // ── TC-LEX-017: 복합 표현식 ──────────────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_017_CompoundExpression) {
+TEST_F(LexerTestFixture, TC_LEX_017_CompoundExpression) {
     auto result = types("var x = 10 + 3.5;");
     EXPECT_THAT(result, ElementsAre(
         TokenType::VAR,
@@ -177,7 +177,7 @@ TEST_F(LexerTest, TC_LEX_017_CompoundExpression) {
 }
 
 // ── TC-LEX-018: true/false 리터럴 값 ─────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_018_BoolLiteralValues) {
+TEST_F(LexerTestFixture, TC_LEX_018_BoolLiteralValues) {
     auto tokens = tokenize("true false");
     ASSERT_GE(tokens.size(), 2u);
     EXPECT_EQ(tokens[0].getTokenType(), TokenType::TRUE_KW);
@@ -187,7 +187,7 @@ TEST_F(LexerTest, TC_LEX_018_BoolLiteralValues) {
 }
 
 // ── TC-LEX-019: 전형적인 프로그램 스니펫 ──────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_019_TypicalProgramSnippet) {
+TEST_F(LexerTestFixture, TC_LEX_019_TypicalProgramSnippet) {
     const std::string src = R"(
         var i = 0;
         for (i = 0; i < 10; i = i + 1) {
@@ -202,7 +202,7 @@ TEST_F(LexerTest, TC_LEX_019_TypicalProgramSnippet) {
 }
 
 // ── TC-LEX-020: EOF 토큰 lexeme 확인 ─────────────────────────────────────────
-TEST_F(LexerTest, TC_LEX_020_EofTokenLexeme) {
+TEST_F(LexerTestFixture, TC_LEX_020_EofTokenLexeme) {
     auto tokens = tokenize("1");
     const auto& eof = tokens.back();
     EXPECT_EQ(eof.getTokenType(), TokenType::EOF_TOKEN);

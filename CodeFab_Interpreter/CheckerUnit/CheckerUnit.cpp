@@ -98,7 +98,11 @@ void CheckerUnit::visitBlockStmt(BlockStmt& stmt) {
 }
 
 void CheckerUnit::visitIfStmt(IfStmt& stmt) {
+	checkExpression(*stmt.getCondition());
+	checkStatement(*stmt.getThenBranch());
 
+	if (stmt.getElseBranch())
+		checkStatement(*stmt.getElseBranch());
 }
 
 void CheckerUnit::visitForStmt(ForStmt& stmt) {

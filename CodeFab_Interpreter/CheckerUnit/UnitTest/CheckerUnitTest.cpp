@@ -139,3 +139,41 @@ TEST_F(CheckerUnitFixture, SelfInitializerThrows) {
 		EXPECT_THAT(std::string(e.what()), HasSubstr("Can't read local variable in its own initializer"));
 	}
 }
+
+TEST_F(CheckerUnitFixture, CheckIfAndElseStatement) {
+	// if (1) { var x = 1; } else { var x = 2; }
+	std::vector<StmtPtr> thenInner;
+	thenInner.push_back(valueDeclaration("x", numLiteral(1.0)));
+
+	std::vector<StmtPtr> elseInner;
+	elseInner.push_back(valueDeclaration("x", numLiteral(2.0)));
+
+	statement_vector.push_back(std::make_unique<IfStmt>(
+		numLiteral(1.0),
+		makeBlockStatement(std::move(thenInner)),
+		makeBlockStatement(std::move(elseInner))
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}
+
+TEST_F(CheckerUnitFixture, IfStmtBinaryExpressiongInCondition) {
+	// var x = 2; if (x > 1) { print x; }
+	std::vector<StmtPtr> thenInner;
+	thenInner.push_back(std::make_unique<PrintStmt>(
+		std::make_unique<VariableExpr>(makeIndentifier("x"))
+	));
+
+	statement_vector.push_back(valueDeclaration("x", numLiteral(2.0)));
+	statement_vector.push_back(std::make_unique<IfStmt>(
+		std::make_unique<BinaryExpr>(
+			std::make_unique<VariableExpr>(makeIndentifier("x")),
+			Token(TokenType::GREATER, ">", nullptr, 1),
+			numLiteral(1.0)
+		),
+		makeBlockStatement(std::move(thenInner)),
+		nullptr
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}

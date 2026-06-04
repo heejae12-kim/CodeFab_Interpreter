@@ -55,3 +55,26 @@ TEST_F(CheckerUnitFixture, DeclareDuplicateValueException) {
 		EXPECT_THAT(std::string(e.what()), HasSubstr("Already a variable with this name in this scope"));
 	}
 }
+
+TEST_F(CheckerUnitFixture, DeclareValueInBlock) {
+	std::vector<StmtPtr> inner;
+	inner.push_back(valueDeclaration("x", numLiteral(42.0)));
+	auto block_statement = std::make_unique<BlockStmt>(std::move(inner));
+	statement_vector.push_back(std::move(block_statement));
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}
+
+TEST_F(CheckerUnitFixture, DeclareSameNameInNestedScopes) {
+	// { var a = 1; { var a = 2; } }
+	std::vector<StmtPtr> inner, outer;
+	inner.push_back(valueDeclaration("a", numLiteral(2.0)));
+	auto inner_block_statement = std::make_unique<BlockStmt>(std::move(inner));
+
+	outer.push_back(valueDeclaration("a", numLiteral(1.0)));
+	outer.push_back(std::move(inner_block_statement));
+
+	auto outer_block_statement = std::make_unique<BlockStmt>(std::move(outer));
+	statement_vector.push_back(std::move(outer_block_statement));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}

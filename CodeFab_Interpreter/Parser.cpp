@@ -17,12 +17,13 @@ StmtPtr Parser::declaration() {
 }
 
 StmtPtr Parser::varDeclaration() {
-    Token name = consume(TokenType::IDENTIFIER);
-    consume(TokenType::EQUAL);
-    ExprPtr init = expression();
-    consume(TokenType::SEMICOLON);
-    return std::make_unique<VarStmt>(std::move(name),
-        std::move(init));
+    Token name = consume(TokenType::IDENTIFIER, "Expected variable name.");
+
+    ExprPtr init;
+    if (match({ TokenType::EQUAL })) init = expression();
+    consume(TokenType::SEMICOLON, "Expected ';' after variable declaration.");
+
+    return std::make_unique<VarStmt>(std::move(name), std::move(init));
 }
 StmtPtr Parser::statement() {
     return expressionStatement();
@@ -30,34 +31,38 @@ StmtPtr Parser::statement() {
 
 StmtPtr Parser::expressionStatement() {
     ExprPtr expr = expression();
-    consume(TokenType::SEMICOLON);
+    consume(TokenType::SEMICOLON, "Expected ';' after expression.");
     return std::make_unique<ExprStmt>(std::move(expr));
 }
 
 ExprPtr Parser::expression() {
-    return primary();
+    return assignment();
 }
 
 ExprPtr Parser::primary() {
-    if (check(TokenType::NUMBER)) {
-        Token tok = advance();
-        return std::make_unique<LiteralExpr>(tok.getLiteral());
+    if (match({ TokenType::NUMBER })) return std::make_unique<LiteralExpr>(previous().getLiteral());
+    if (match({ TokenType::STRING })) return std::make_unique<LiteralExpr>(previous().getLiteral());
+    if (check(TokenType::TRUE_KW)) {
+        advance(); 
+        return std::make_unique<LiteralExpr>(true);
+    }
+    if (check(TokenType::FALSE_KW)) {
+        advance();
+        return std::make_unique<LiteralExpr>(false);
     }
     if (check(TokenType::IDENTIFIER)) {
         Token tok = advance();
         return std::make_unique<VariableExpr>(std::move(tok));
     }
-    return nullptr;
+    throw ParseError("[line " + std::to_string(peek().getLine()) + "] Syntax Error at '" + peek().getLexme() + "': Expected expression.");
 }
 
 
 bool Parser::check(TokenType t)  {
-    return
-        tokens_[current].getTokenType() == t;
+    return tokens_[current].getTokenType() == t;
 }
 bool Parser::isAtEnd()  {
-    return
-        tokens_[current].getTokenType() == TokenType::EOF_TOKEN;
+    return tokens_[current].getTokenType() == TokenType::EOF_TOKEN;
 }
 Token& Parser::advance() {
     if (!isAtEnd()) ++current;
@@ -82,8 +87,7 @@ bool Parser::match(std::initializer_list<TokenType>
     return false;
 }
 
-Token   Parser::consume(TokenType type)
-{
+Token Parser::consume(TokenType type, const std::string& msg) {
     if (check(type)) return advance();
-    return peek();
+    throw ParseError("[line " + std::to_string(peek().getLine()) + "] Syntax Error at '" + peek().getLexme() + "': " + msg);
 }

@@ -18,11 +18,11 @@ StmtPtr Parser::declaration() {
 StmtPtr Parser::varDeclaration() {
     Token name = consume(TokenType::IDENTIFIER, "Expected variable name.");
 
-    ExprPtr init;
-    if (match({ TokenType::EQUAL })) init = expression();
+    ExprPtr p_init;
+    if (match({ TokenType::EQUAL })) p_init = expression();
     consume(TokenType::SEMICOLON, "Expected ';' after variable declaration.");
 
-    return std::make_unique<VarStmt>(std::move(name), std::move(init));
+    return std::make_unique<VarStmt>(std::move(name), std::move(p_init));
 }
 
 StmtPtr Parser::statement() {
@@ -52,16 +52,16 @@ StmtPtr Parser::ifStatement() {
 
 StmtPtr Parser::forStatement() {
     consume(TokenType::LEFT_PAREN, "Expected '(' after 'for'.");
-    StmtPtr init;
-    if (match({ TokenType::VAR })) init = varDeclaration();
-    else init = expressionStatement();
+    StmtPtr p_init;
+    if (match({ TokenType::VAR })) p_init = varDeclaration();
+    else p_init = expressionStatement();
 
     ExprPtr cond = comparison();
     consume(TokenType::SEMICOLON, "Expected ';' after for condition.");
     ExprPtr incr = assignment();
     consume(TokenType::RIGHT_PAREN, "Expected ')' after for clauses.");
     StmtPtr body = statement();
-    return std::make_unique<ForStmt>(std::move(init), std::move(cond), std::move(incr), std::move(body));
+    return std::make_unique<ForStmt>(std::move(p_init), std::move(cond), std::move(incr), std::move(body));
 }
 
 StmtPtr Parser::blockStatement() {

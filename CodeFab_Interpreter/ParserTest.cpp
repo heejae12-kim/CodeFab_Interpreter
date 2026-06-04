@@ -658,3 +658,56 @@ TEST(ParserTest, BoolEqualityAndPrint) {
         stmts[1]->accept(mock);
     }
 }
+
+TEST(ParserTest, GroupingExpr) {
+    std::vector<Token> tokens = {
+        // print (1 + 2) * 3;
+        Token(TokenType::PRINT,       "print", nullptr, 1),
+        Token(TokenType::LEFT_PAREN,  "(",     nullptr, 1),
+        Token(TokenType::NUMBER,      "1",     1.0,     1),
+        Token(TokenType::PLUS,        "+",     nullptr, 1),
+        Token(TokenType::NUMBER,      "2",     2.0,     1),
+        Token(TokenType::RIGHT_PAREN, ")",     nullptr, 1),
+        Token(TokenType::STAR,        "*",     nullptr, 1),
+        Token(TokenType::NUMBER,      "3",     3.0,     1),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 1),
+        Token(TokenType::EOF_TOKEN,   "",      nullptr, 1),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 1u);
+
+    MockStmtVisitor mock;
+    EXPECT_CALL(mock, visitPrintStmt(testing::_))
+        .WillOnce([](PrintStmt& stmt) {
+        auto* mul = dynamic_cast<BinaryExpr*>(stmt.getExpression().get());
+        ASSERT_NE(mul, nullptr);
+        EXPECT_EQ(mul->getOp().getTokenType(), TokenType::STAR);
+
+        // left: (1 + 2)
+        auto* group = dynamic_cast<GroupingExpr*>(mul->getLeft().get());
+        ASSERT_NE(group, nullptr);
+
+        auto* add = dynamic_cast<BinaryExpr*>(group->getExpression().get());
+        ASSERT_NE(add, nullptr);
+        EXPECT_EQ(add->getOp().getTokenType(), TokenType::PLUS);
+
+        auto* addLeft = dynamic_cast<LiteralExpr*>(add->getLeft().get());
+        ASSERT_NE(addLeft, nullptr);
+        EXPECT_DOUBLE_EQ(std::get<double>(addLeft->getValue()), 1.0);
+
+        auto* addRight = dynamic_cast<LiteralExpr*>(add->getRight().get());
+        ASSERT_NE(addRight, nullptr);
+        EXPECT_DOUBLE_EQ(std::get<double>(addRight->getValue()), 2.0);
+
+        // right: 3
+        auto* three = dynamic_cast<LiteralExpr*>(mul->getRight().get());
+        ASSERT_NE(three, nullptr);
+        EXPECT_DOUBLE_EQ(std::get<double>(three->getValue()), 3.0);
+        });
+
+    stmts[0]->accept(mock);
+}
+

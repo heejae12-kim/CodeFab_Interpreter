@@ -17,8 +17,12 @@ private:
 	StmtPtr statement();
 	StmtPtr expressionStatement();
 	StmtPtr printStatement();
+	StmtPtr ifStatement();
+	StmtPtr blockStatement();
+
 
 	ExprPtr expression();
+	ExprPtr comparison();
 	ExprPtr addition();
 	ExprPtr multiplication();
 	ExprPtr primary();

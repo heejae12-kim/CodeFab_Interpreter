@@ -1,7 +1,9 @@
 #include "CheckerUnit.h"
 
 void CheckerUnit::doChecker(vector<StmtPtr>& statements_tree_vector) {
+	check_values_in_scopes_vector.push_back({});
 	checkBlcok(statements_tree_vector);
+	check_values_in_scopes_vector.pop_back();
 }
 
 void CheckerUnit::checkBlcok(const std::vector<StmtPtr>& statements_tree_vector) {
@@ -66,7 +68,7 @@ void CheckerUnit::visitVarStmt(VarStmt& stmt) {
 }
 
 void CheckerUnit::visitBlockStmt(BlockStmt& stmt) {
-
+	//
 }
 
 void CheckerUnit::visitIfStmt(IfStmt& stmt) {

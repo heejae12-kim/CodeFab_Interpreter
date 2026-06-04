@@ -22,6 +22,8 @@ private:
 	void checkExpression(Expr& expression_node);
 	void addBeginBlockScope();
 	void addEndBlockScope();
+	void declareValue(const Token& name);
+	void defineValue(const Token& name);
 
 #pragma region ExprVisitor
 

@@ -68,7 +68,9 @@ void CheckerUnit::visitVarStmt(VarStmt& stmt) {
 }
 
 void CheckerUnit::visitBlockStmt(BlockStmt& stmt) {
-	//
+	check_values_in_scopes_vector.push_back({});
+	checkBlcok(stmt.getStatements());
+	check_values_in_scopes_vector.pop_back();
 }
 
 void CheckerUnit::visitIfStmt(IfStmt& stmt) {

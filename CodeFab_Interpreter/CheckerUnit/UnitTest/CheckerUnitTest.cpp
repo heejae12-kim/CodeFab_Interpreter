@@ -108,3 +108,16 @@ TEST_F(CheckerUnitFixture, UnaryExpressionNegativeNumber) {
 
 	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
 }
+
+TEST_F(CheckerUnitFixture, BinaryExpressiongAddition) {
+	// print 1 + 2;
+	statement_vector.push_back(std::make_unique<PrintStmt>(
+		std::make_unique<BinaryExpr>(
+			numLiteral(1.0),
+			Token(TokenType::PLUS, "+", nullptr, 1),
+			numLiteral(2.0)
+		)
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}

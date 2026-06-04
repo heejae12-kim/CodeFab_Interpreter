@@ -39,5 +39,5 @@ private:
 	Token& peek();
 	bool isAtEnd();
 	Token& previous();
-	Token consume(TokenType type);
+	Token consume(TokenType type, const std::string& msg);
 };

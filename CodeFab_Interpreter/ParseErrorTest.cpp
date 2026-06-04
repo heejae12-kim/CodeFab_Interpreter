@@ -102,3 +102,78 @@ TEST(ParserErrorTest, BlockMissingRightBrace) {
     Parser parser(tokens);
     EXPECT_THROW(parser.parse(), ParseError);
 }
+
+// 7. for에서 LEFT_PAREN 누락: `for a = 0; a < 4; a = a + 1) { ... }`
+TEST(ParserErrorTest, ForMissingLeftParen) {
+    std::vector<Token> tokens = {
+        Token(TokenType::FOR,         "for",   nullptr, 1),
+        // LEFT_PAREN 누락
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 1),
+        Token(TokenType::EQUAL,       "=",     nullptr, 1),
+        Token(TokenType::NUMBER,      "0",     0.0,     1),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 1),
+        Token(TokenType::LESS,        "<",     nullptr, 1),
+        Token(TokenType::NUMBER,      "4",     4.0,     1),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 1),
+        Token(TokenType::EQUAL,       "=",     nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 1),
+        Token(TokenType::PLUS,        "+",     nullptr, 1),
+        Token(TokenType::NUMBER,      "1",     1.0,     1),
+        Token(TokenType::RIGHT_PAREN, ")",     nullptr, 1),
+        Token(TokenType::EOF_TOKEN,   "",      nullptr, 1),
+    };
+    Parser parser(tokens);
+    EXPECT_THROW(parser.parse(), ParseError);
+}
+
+// 8. if body에서 { 누락: `if (a > 1) print 3; }`
+TEST(ParserErrorTest, IfMissingLeftBrace) {
+    std::vector<Token> tokens = {
+        Token(TokenType::IF,          "if",    nullptr, 1),
+        Token(TokenType::LEFT_PAREN,  "(",     nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 1),
+        Token(TokenType::GREATER,     ">",     nullptr, 1),
+        Token(TokenType::NUMBER,      "1",     1.0,     1),
+        Token(TokenType::RIGHT_PAREN, ")",     nullptr, 1),
+        // LEFT_BRACE 누락
+        Token(TokenType::PRINT,       "print", nullptr, 1),
+        Token(TokenType::NUMBER,      "3",     3.0,     1),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 1),
+        Token(TokenType::RIGHT_BRACE, "}",     nullptr, 1),
+        Token(TokenType::EOF_TOKEN,   "",      nullptr, 1),
+    };
+    Parser parser(tokens);
+    EXPECT_THROW(parser.parse(), ParseError);
+}
+
+// for body에서 { 누락
+TEST(ParserErrorTest, ForVarInitUnexpectedRightBrace) {
+    std::vector<Token> tokens = {
+        Token(TokenType::FOR,         "for",   nullptr, 1),
+        Token(TokenType::LEFT_PAREN,  "(",     nullptr, 1),
+        Token(TokenType::VAR,         "var",   nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 1),
+        Token(TokenType::EQUAL,       "=",     nullptr, 1),
+        Token(TokenType::NUMBER,      "0",     0.0,     1),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 1),
+        Token(TokenType::LESS,        "<",     nullptr, 1),
+        Token(TokenType::NUMBER,      "4",     4.0,     1),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 1),
+        Token(TokenType::EQUAL,       "=",     nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 1),
+        Token(TokenType::PLUS,        "+",     nullptr, 1),
+        Token(TokenType::NUMBER,      "1",     1.0,     1),
+        Token(TokenType::RIGHT_PAREN, ")",     nullptr, 1),
+        Token(TokenType::PRINT,       "print", nullptr, 2),
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 2),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 2),
+        Token(TokenType::RIGHT_BRACE, "}",     nullptr, 3),  // { 없는 }
+        Token(TokenType::EOF_TOKEN,   "",      nullptr, 3),
+    };
+    Parser parser(tokens);
+    EXPECT_THROW(parser.parse(), ParseError);
+}

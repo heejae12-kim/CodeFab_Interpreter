@@ -6,6 +6,20 @@ void CheckerUnit::doChecker(vector<StmtPtr>& statements_tree_vector) {
 	addEndBlockScope();
 }
 
+void CheckerUnit::checkBlock(const std::vector<StmtPtr>& statements_tree_vector) {
+	for (const auto& statement_node : statements_tree_vector) {
+		checkStatement(*statement_node);
+	}
+}
+
+void CheckerUnit::checkStatement(Stmt& statements_node) {
+	statements_node.accept(*this);
+}
+
+void CheckerUnit::checkExpression(Expr& expression_node) {
+	expression_node.accept(*this);
+}
+
 void CheckerUnit::addBeginBlockScope() {
 	check_values_in_scopes_vector.push_back({});
 }
@@ -28,20 +42,6 @@ void CheckerUnit::declareValue(const Token& name) {
 void CheckerUnit::defineValue(const Token& name) {
 	if (!check_values_in_scopes_vector.empty())
 		check_values_in_scopes_vector.back()[name.getLexme()] = true;
-}
-
-void CheckerUnit::checkBlock(const std::vector<StmtPtr>& statements_tree_vector) {
-	for (const auto& statement_node : statements_tree_vector) {
-		checkStatement(*statement_node);
-	}
-}
-
-void CheckerUnit::checkStatement(Stmt& statements_node) {
-	statements_node.accept(*this);
-}
-
-void CheckerUnit::checkExpression(Expr& expression_node) {
-	expression_node.accept(*this);
 }
 
 #pragma region ExprVisitor

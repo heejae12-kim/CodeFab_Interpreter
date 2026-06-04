@@ -25,6 +25,17 @@ StmtPtr Parser::varDeclaration() {
         std::move(init));
 }
 StmtPtr Parser::statement() {
+    if (tokens_[current].getTokenType() ==
+        TokenType::PRINT) {
+        current++;
+        ValuableValue left = tokens_[current++].getLiteral();// NUMBER (1)
+        Token op = tokens_[current++];
+        ValuableValue right = tokens_[current++].getLiteral();// NUMBER (2)
+        current++;
+        return std::make_unique<PrintStmt>(std::make_unique<BinaryExpr>(
+                std::make_unique<LiteralExpr>(std::move(left)), std::move(op),std::make_unique<LiteralExpr>(std::move(right))));
+    }
+
     return expressionStatement();
 }
 

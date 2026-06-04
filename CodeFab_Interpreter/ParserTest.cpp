@@ -46,3 +46,38 @@ TEST(ParserTest, VarDeclaration) {
 
     stmts[0]->accept(mock);
 }
+
+
+TEST(ParserTest, PrintAddition) {
+    std::vector<Token> tokens = {
+        Token(TokenType::PRINT, "print", nullptr, 1),
+        Token(TokenType::NUMBER, "1", 1.0, 1),
+        Token(TokenType::PLUS, "+", nullptr, 1),
+        Token(TokenType::NUMBER, "2", 2.0, 1),
+        Token(TokenType::SEMICOLON, ";", nullptr, 1),
+        Token(TokenType::EOF_TOKEN, "", nullptr, 1),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    MockStmtVisitor mock;
+    EXPECT_CALL(mock, visitPrintStmt(testing::_))
+        .WillOnce([](PrintStmt& stmt) {
+        auto* bin = dynamic_cast<BinaryExpr*>(stmt.getExpression().get());
+        ASSERT_NE(bin, nullptr);
+        EXPECT_EQ(bin->getOp().getTokenType(), TokenType::PLUS);
+
+        auto* left = dynamic_cast<LiteralExpr*>(bin->getLeft().get());
+        ASSERT_NE(left, nullptr);
+
+        EXPECT_DOUBLE_EQ(std::get<double>(left->getValue()), 1.0);
+
+        auto* right = dynamic_cast<LiteralExpr*>(bin->getRight().get());
+        ASSERT_NE(right, nullptr);
+
+        EXPECT_DOUBLE_EQ(std::get<double>(right->getValue()), 2.0);
+        });
+
+    stmts[0]->accept(mock);
+}

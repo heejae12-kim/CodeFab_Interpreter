@@ -20,6 +20,8 @@ private:
 	void checkBlcok(const std::vector<StmtPtr>& statements_tree_vector);
 	void checkStatement(Stmt& statements_node);
 	void checkExpression(Expr& expression_node);
+	void addBeginBlockScope();
+	void addEndBlockScope();
 
 #pragma region ExprVisitor
 

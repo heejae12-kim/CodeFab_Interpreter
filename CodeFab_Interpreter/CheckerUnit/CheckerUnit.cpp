@@ -1,8 +1,16 @@
 #include "CheckerUnit.h"
 
 void CheckerUnit::doChecker(vector<StmtPtr>& statements_tree_vector) {
-	check_values_in_scopes_vector.push_back({});
+	addBeginBlockScope();
 	checkBlcok(statements_tree_vector);
+	addEndBlockScope();
+}
+
+void CheckerUnit::addBeginBlockScope() {
+	check_values_in_scopes_vector.push_back({});
+}
+
+void CheckerUnit::addEndBlockScope() {
 	check_values_in_scopes_vector.pop_back();
 }
 
@@ -68,9 +76,9 @@ void CheckerUnit::visitVarStmt(VarStmt& stmt) {
 }
 
 void CheckerUnit::visitBlockStmt(BlockStmt& stmt) {
-	check_values_in_scopes_vector.push_back({});
+	addBeginBlockScope();
 	checkBlcok(stmt.getStatements());
-	check_values_in_scopes_vector.pop_back();
+	addEndBlockScope();
 }
 
 void CheckerUnit::visitIfStmt(IfStmt& stmt) {

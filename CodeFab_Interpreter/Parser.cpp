@@ -25,19 +25,17 @@ StmtPtr Parser::varDeclaration() {
         std::move(init));
 }
 StmtPtr Parser::statement() {
-    if (tokens_[current].getTokenType() ==
-        TokenType::PRINT) {
-        current++;
-        ValuableValue left = tokens_[current++].getLiteral();// NUMBER (1)
-        Token op = tokens_[current++];
-        ValuableValue right = tokens_[current++].getLiteral();// NUMBER (2)
-        current++;
-        return std::make_unique<PrintStmt>(std::make_unique<BinaryExpr>(
-                std::make_unique<LiteralExpr>(std::move(left)), std::move(op),std::make_unique<LiteralExpr>(std::move(right))));
-    }
-
+    if (match({ TokenType::PRINT })) 
+        return printStatement();
     return expressionStatement();
 }
+
+StmtPtr Parser::printStatement() {
+    ExprPtr value = expression();
+    consume(TokenType::SEMICOLON);
+    return std::make_unique<PrintStmt>(std::move(value));
+}
+
 
 StmtPtr Parser::expressionStatement() {
     ExprPtr expr = expression();
@@ -46,7 +44,19 @@ StmtPtr Parser::expressionStatement() {
 }
 
 ExprPtr Parser::expression() {
-    return primary();
+    return addition();
+}
+
+ExprPtr Parser::addition() {
+    ExprPtr expr = primary();
+    while (match({ TokenType::PLUS, TokenType::MINUS }))
+    {
+        Token op = previous();
+        ExprPtr right = primary();
+        expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(right));
+    }
+    return expr;
+
 }
 
 ExprPtr Parser::primary() {

@@ -1,10 +1,26 @@
 #include "Lexer.h"
+#include <cctype>
+#include <unordered_map>
+
+static const std::unordered_map<std::string, TokenType> keywords = {
+    {"var",   TokenType::VAR},
+    {"if",    TokenType::IF},
+    {"else",  TokenType::ELSE},
+    {"for",   TokenType::FOR},
+    {"print", TokenType::PRINT},
+    {"true",  TokenType::TRUE_KW},
+    {"false", TokenType::FALSE_KW},
+};
 
 Lexer::Lexer(std::string source) : source_(std::move(source)) {}
 
 std::vector<Token> Lexer::tokenize() {
-    // TODO: RED → GREEN 단계에서 구현
-    return {};
+    while (!isAtEnd()) {
+        start_ = current_;
+        scanToken();
+    }
+    tokens_.emplace_back(TokenType::EOF_TOKEN, "", nullptr, line_);
+    return std::move(tokens_);
 }
 
 bool Lexer::isAtEnd() const {
@@ -30,10 +46,85 @@ bool Lexer::match(char expected) {
     return true;
 }
 
-void Lexer::scanToken() {}
-void Lexer::scanString() {}
-void Lexer::scanNumber() {}
-void Lexer::scanIdentifierOrKeyword() {}
+void Lexer::scanToken() {
+    char c = advance();
+    switch (c) {
+    case '(': addToken(TokenType::LEFT_PAREN);  break;
+    case ')': addToken(TokenType::RIGHT_PAREN); break;
+    case '{': addToken(TokenType::LEFT_BRACE);  break;
+    case '}': addToken(TokenType::RIGHT_BRACE); break;
+    case ';': addToken(TokenType::SEMICOLON);   break;
+    case '+': addToken(TokenType::PLUS);        break;
+    case '-': addToken(TokenType::MINUS);       break;
+    case '*': addToken(TokenType::STAR);        break;
+    case '/':
+        if (match('/')) {
+            while (!isAtEnd() && peek() != '\n') advance();
+        } else {
+            addToken(TokenType::SLASH);
+        }
+        break;
+    case '<': addToken(match('=') ? TokenType::LESS_EQUAL    : TokenType::LESS);    break;
+    case '>': addToken(match('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER); break;
+    case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL   : TokenType::EQUAL);   break;
+    case '!':
+        if (match('=')) {
+            addToken(TokenType::BANG_EQUAL);
+        } else {
+            throw LexError(line_, std::string("unexpected character '") + c + "'");
+        }
+        break;
+    case '"': scanString(); break;
+    case ' ': case '\r': case '\t': break;
+    case '\n': ++line_; break;
+    default:
+        if (std::isdigit(static_cast<unsigned char>(c))) {
+            scanNumber();
+        } else if (std::isalpha(static_cast<unsigned char>(c)) || c == '_') {
+            scanIdentifierOrKeyword();
+        } else {
+            throw LexError(line_, std::string("unexpected character '") + c + "'");
+        }
+        break;
+    }
+}
+
+void Lexer::scanString() {
+    while (!isAtEnd() && peek() != '"') {
+        if (peek() == '\n') ++line_;
+        advance();
+    }
+    if (isAtEnd()) {
+        throw LexError(line_, "unterminated string");
+    }
+    advance(); // 닫는 "
+    std::string value = source_.substr(start_ + 1, current_ - start_ - 2);
+    addToken(TokenType::STRING, std::move(value));
+}
+
+void Lexer::scanNumber() {
+    while (!isAtEnd() && std::isdigit(static_cast<unsigned char>(peek()))) advance();
+    if (peek() == '.' && std::isdigit(static_cast<unsigned char>(peekNext()))) {
+        advance(); // '.'
+        while (!isAtEnd() && std::isdigit(static_cast<unsigned char>(peek()))) advance();
+    }
+    double value = std::stod(source_.substr(start_, current_ - start_));
+    addToken(TokenType::NUMBER, value);
+}
+
+void Lexer::scanIdentifierOrKeyword() {
+    while (!isAtEnd() && (std::isalnum(static_cast<unsigned char>(peek())) || peek() == '_')) advance();
+    std::string text = source_.substr(start_, current_ - start_);
+    auto it = keywords.find(text);
+    if (it == keywords.end()) {
+        addToken(TokenType::IDENTIFIER);
+        return;
+    }
+    TokenType type = it->second;
+    if (type == TokenType::TRUE_KW)       addToken(type, true);
+    else if (type == TokenType::FALSE_KW) addToken(type, false);
+    else                                  addToken(type);
+}
 
 void Lexer::addToken(TokenType type) {
     addToken(type, nullptr);

@@ -75,9 +75,11 @@ void CheckerUnit::visitVarStmt(VarStmt& stmt) {
 			+ std::to_string(declared_value_token.getLine())
 			+ "] Checker Error: Already a variable with this name in this scope.");
 
+	inner_most_scope[declared_value_token.getLexme()] = false; // declared, not yet initialized
+
 	if(stmt.getInitializer()) checkExpression(*stmt.getInitializer());
 
-	inner_most_scope[declared_value_token.getLexme()] = false; // declared, not yet initialized
+	inner_most_scope[declared_value_token.getLexme()] = true; // fully initialized
 }
 
 void CheckerUnit::visitBlockStmt(BlockStmt& stmt) {

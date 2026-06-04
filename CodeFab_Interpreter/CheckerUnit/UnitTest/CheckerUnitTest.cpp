@@ -96,3 +96,15 @@ TEST_F(CheckerUnitFixture, PrintStringLiteral) {
 	statement_vector.push_back(std::make_unique<PrintStmt>(stringLiteral("hello")));
 	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
 }
+
+TEST_F(CheckerUnitFixture, UnaryExpressionNegativeNumber) {
+	// print -1;
+	statement_vector.push_back(std::make_unique<PrintStmt>(
+		std::make_unique<UnaryExpr>(
+			Token(TokenType::MINUS, "-", nullptr, 1),
+			numLiteral(1.0)
+		)
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}

@@ -33,7 +33,8 @@ ValuableValue CheckerUnit::visitLiteralExpr(LiteralExpr& expr) {
 }
 
 ValuableValue CheckerUnit::visitUnaryExpr(UnaryExpr& expr) {
-	return {};
+	checkExpression(*expr.getRight());
+	return nullptr;
 }
 
 ValuableValue CheckerUnit::visitBinaryExpr(BinaryExpr& expr) {

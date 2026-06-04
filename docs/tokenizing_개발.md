@@ -214,6 +214,53 @@ private:
 
 ---
 
+## 세션 006 — Lexer GREEN 단계 구현 (2026-06-04)
+
+### 커밋
+```
+b6aba71  [feat][tokenizing] tokenizing 구현(GREEN 단계)
+```
+
+### 사용자 프롬프트 원문
+```
+GREEN 단계로 전환해서 구현해줘.
+```
+
+### 주목적
+`Lexer::tokenize()` 실제 로직을 구현하여 TC-LEX-001 ~ 020 전체를 GREEN으로 전환한다.
+
+### 변경 파일
+| 파일 | 변경 유형 | 내용 |
+|------|-----------|------|
+| `CodeFab_Interpreter/Lexer.cpp` | 수정 | `tokenize()` 및 스캐너 메서드 전체 구현 |
+
+### 구현 핵심 내용
+| 메서드 | 역할 |
+|--------|------|
+| `tokenize()` | 전체 스캔 루프 + EOF_TOKEN 추가 |
+| `scanToken()` | 문자별 switch — 단일 문자, 1-2자 연산자, 주석, 공백, 숫자/문자 분기 |
+| `scanString()` | `"..."` 파싱, 따옴표 제외 literal 저장, 미닫힘 시 `LexError` |
+| `scanNumber()` | 정수/소수 파싱 → `std::stod` → `double` literal |
+| `scanIdentifierOrKeyword()` | 키워드 맵 조회, `true`/`false`는 `bool` literal 저장 |
+
+### 테스트 결과
+```
+[==========] Running 20 tests from 1 test suite.
+[  PASSED  ] 20 tests.
+```
+
+### 현재 TDD 단계
+```
+[RED]      ✅ 테스트 20개 작성 완료
+[GREEN]    ✅ TC-LEX-001~020 전부 통과 (20/20)
+[REFACTOR]    미착수
+```
+
+### 다음 세션 목표
+Parser 구현을 위한 TDD RED 단계 — `test_parser.cpp` 작성.
+
+---
+
 ## 세션 005 — 빌드 에러 수정: /utf-8 플래그 누락 (2026-06-04)
 
 ### 커밋

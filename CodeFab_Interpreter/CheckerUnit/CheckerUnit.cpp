@@ -2,7 +2,7 @@
 
 void CheckerUnit::doChecker(vector<StmtPtr>& statements_tree_vector) {
 	addBeginBlockScope();
-	checkBlcok(statements_tree_vector);
+	checkBlock(statements_tree_vector);
 	addEndBlockScope();
 }
 
@@ -30,7 +30,7 @@ void CheckerUnit::defineValue(const Token& name) {
 		check_values_in_scopes_vector.back()[name.getLexme()] = true;
 }
 
-void CheckerUnit::checkBlcok(const std::vector<StmtPtr>& statements_tree_vector) {
+void CheckerUnit::checkBlock(const std::vector<StmtPtr>& statements_tree_vector) {
 	for (const auto& statement_node : statements_tree_vector) {
 		checkStatement(*statement_node);
 	}
@@ -104,7 +104,7 @@ void CheckerUnit::visitVarStmt(VarStmt& stmt) {
 
 void CheckerUnit::visitBlockStmt(BlockStmt& stmt) {
 	addBeginBlockScope();
-	checkBlcok(stmt.getStatements());
+	checkBlock(stmt.getStatements());
 	addEndBlockScope();
 }
 

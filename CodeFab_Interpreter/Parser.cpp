@@ -141,7 +141,6 @@ ExprPtr Parser::primary() {
     throw ParseError("[line " + std::to_string(peek().getLine()) + "] Syntax Error at '" + peek().getLexme() + "': Expected expression.");
 }
 
-
 bool Parser::check(TokenType t)  {
     return tokens_[current].getTokenType() == t;
 }

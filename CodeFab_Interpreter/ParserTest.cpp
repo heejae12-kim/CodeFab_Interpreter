@@ -521,3 +521,140 @@ TEST(ParserTest, StringVarAndPrint) {
         stmts[1]->accept(mock);
     }
 }
+
+TEST(ParserTest, BoolVarAndIfPrint) {
+    std::vector<Token> tokens = {
+        // var test_bool1 = true;
+        Token(TokenType::VAR,         "var",        nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "test_bool1", nullptr, 1),
+        Token(TokenType::EQUAL,       "=",          nullptr, 1),
+        Token(TokenType::TRUE_KW,     "true",       true, 1),
+        Token(TokenType::SEMICOLON,   ";",          nullptr, 1),
+        // if(test_bool1) print "true";
+        Token(TokenType::IF,          "if",         nullptr, 2),
+        Token(TokenType::LEFT_PAREN,  "(",          nullptr, 2),
+        Token(TokenType::IDENTIFIER,  "test_bool1", nullptr, 2),
+        Token(TokenType::RIGHT_PAREN, ")",          nullptr, 2),
+        Token(TokenType::PRINT,       "print",      nullptr, 2),
+        Token(TokenType::STRING,      "true",       std::string("true"), 2),
+        Token(TokenType::SEMICOLON,   ";",          nullptr, 2),
+        Token(TokenType::EOF_TOKEN,   "",           nullptr, 2),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 2u);
+
+    // var test_bool1 = true;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "test_bool1");
+            auto* lit = dynamic_cast<LiteralExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(lit, nullptr);
+
+            ASSERT_TRUE(std::holds_alternative<bool>(lit->getValue()));
+            EXPECT_EQ(std::get<bool>(lit->getValue()), true);
+            });
+        stmts[0]->accept(mock);
+    }
+
+    // if(test_bool1) print "true";
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitIfStmt(testing::_))
+            .WillOnce([](IfStmt& stmt) {
+            auto* cond =
+            dynamic_cast<VariableExpr*>(stmt.getCondition().get());
+        ASSERT_NE(cond, nullptr);
+        EXPECT_EQ(cond->getName().getLexme(), "test_bool1");
+        auto* print = dynamic_cast<PrintStmt*>(stmt.getThenBranch().get());
+        ASSERT_NE(print, nullptr);
+
+        auto* lit = dynamic_cast<LiteralExpr*>(print->getExpression().get());
+        ASSERT_NE(lit, nullptr);
+        ASSERT_TRUE(std::holds_alternative<std::string>(lit->getValue()));
+
+        EXPECT_EQ(std::get<std::string>(lit->getValue()), "true");
+        EXPECT_EQ(stmt.getElseBranch(), nullptr);
+        });
+        stmts[1]->accept(mock);
+    }
+}
+
+TEST(ParserTest, BoolEqualityAndPrint) {
+    std::vector<Token> tokens = {
+        // var test_bool = false;
+        Token(TokenType::VAR,         "var",       nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "test_bool", nullptr, 1),
+        Token(TokenType::EQUAL,       "=",         nullptr, 1),
+        Token(TokenType::FALSE_KW,    "false",     false, 1),
+        Token(TokenType::SEMICOLON,   ";",         nullptr, 1),
+        // if (test_bool == false) print "false";
+        Token(TokenType::IF,          "if",        nullptr, 2),
+        Token(TokenType::LEFT_PAREN,  "(",         nullptr, 2),
+        Token(TokenType::IDENTIFIER,  "test_bool", nullptr, 2),
+        Token(TokenType::EQUAL_EQUAL, "==",        nullptr, 2),
+        Token(TokenType::FALSE_KW,    "false",     false, 2),
+        Token(TokenType::RIGHT_PAREN, ")",         nullptr, 2),
+        Token(TokenType::PRINT,       "print",     nullptr, 2),
+        Token(TokenType::STRING,      "false",     std::string("false"), 2),
+        Token(TokenType::SEMICOLON,   ";",         nullptr, 2),
+        Token(TokenType::EOF_TOKEN,   "",          nullptr, 2),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 2u);
+
+    // var test_bool = false;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "test_bool");
+            auto* lit = dynamic_cast<LiteralExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(lit, nullptr);
+
+            ASSERT_TRUE(std::holds_alternative<bool>(lit->getValue()));
+            EXPECT_EQ(std::get<bool>(lit->getValue()), false);
+            });
+        stmts[0]->accept(mock);
+    }
+
+    // if (test_bool == false) print "false";
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitIfStmt(testing::_))
+            .WillOnce([](IfStmt& stmt) {
+            // condition: test_bool == false
+            auto* cond = dynamic_cast<BinaryExpr*>(stmt.getCondition().get());
+            ASSERT_NE(cond, nullptr);
+            EXPECT_EQ(cond->getOp().getTokenType(), TokenType::EQUAL_EQUAL);
+
+            auto* left = dynamic_cast<VariableExpr*>(cond->getLeft().get());
+            ASSERT_NE(left, nullptr);
+            EXPECT_EQ(left->getName().getLexme(), "test_bool");
+
+            auto* right = dynamic_cast<LiteralExpr*>(cond->getRight().get());
+            ASSERT_NE(right, nullptr);
+
+            ASSERT_TRUE(std::holds_alternative<bool>(right->getValue()));
+            EXPECT_EQ(std::get<bool>(right->getValue()), false);
+
+            // thenBranch: print "false";
+            auto* print = dynamic_cast<PrintStmt*>(stmt.getThenBranch().get());
+            ASSERT_NE(print, nullptr);
+            auto* lit = dynamic_cast<LiteralExpr*>(print->getExpression().get());
+            ASSERT_NE(lit, nullptr);
+            ASSERT_TRUE(std::holds_alternative<std::string>( lit->getValue()));
+
+            EXPECT_EQ(std::get<std::string>(lit->getValue()), "false");
+            EXPECT_EQ(stmt.getElseBranch(), nullptr);
+            });
+        stmts[1]->accept(mock);
+    }
+}

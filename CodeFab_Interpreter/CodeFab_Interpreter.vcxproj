@@ -139,13 +139,16 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Lexer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="test_lexer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Expr.h" />
+    <ClInclude Include="Lexer.h" />
     <ClInclude Include="Stmt.h" />
     <ClInclude Include="Token.h" />
   </ItemGroup>

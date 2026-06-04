@@ -145,7 +145,10 @@
   <ItemGroup>
     <ClCompile Include="Lexer.cpp" />
     <ClCompile Include="CheckerUnit\CheckerUnit.cpp" />
-    <ClCompile Include="CheckerUnit\UnitTest\CheckerUnitTest.cpp" />
+    <ClCompile Include="CheckerUnit\UnitTest\CheckerUnitTest.cpp">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'"> %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="test_lexer.cpp" />
     <ClCompile Include="Parser.cpp" />

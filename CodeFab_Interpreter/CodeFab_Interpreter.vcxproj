@@ -150,6 +150,7 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'"> %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ParseErrorTest.cpp" />
     <ClCompile Include="test_lexer.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="ParserTest.cpp" />

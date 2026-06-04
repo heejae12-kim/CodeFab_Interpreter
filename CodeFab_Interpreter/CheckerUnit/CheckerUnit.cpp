@@ -28,8 +28,8 @@ void CheckerUnit::checkExpression(Expr& expression_node) {
 	expression_node.accept(*this);
 }
 
-ValuableValue CheckerUnit::visitLiteralExpr(LiteralExpr& expr) { 
-	return {}; 
+ValuableValue CheckerUnit::visitLiteralExpr(LiteralExpr& expr) {
+	return nullptr;
 }
 
 ValuableValue CheckerUnit::visitUnaryExpr(UnaryExpr& expr) {
@@ -41,11 +41,13 @@ ValuableValue CheckerUnit::visitBinaryExpr(BinaryExpr& expr) {
 }
 
 ValuableValue CheckerUnit::visitGroupingExpr(GroupingExpr& expr) {
-	return {};
+	// ( expression ) 
+	checkExpression(*expr.getExpression());
+	return nullptr;
 }
 
 ValuableValue CheckerUnit::visitVariableExpr(VariableExpr& expr) {
-	return {};
+	return nullptr;
 }
 
 ValuableValue CheckerUnit::visitAssignExpr(AssignExpr& expr) {
@@ -55,11 +57,11 @@ ValuableValue CheckerUnit::visitAssignExpr(AssignExpr& expr) {
 
 //// StmtVisitor
 void CheckerUnit::visitPrintStmt(PrintStmt& stmt) {
-
+	checkExpression(*stmt.getExpression());
 }
 
 void CheckerUnit::visitExprStmt(ExprStmt& stmt) {
-
+	checkExpression(*stmt.getExpression());
 }
 
 void CheckerUnit::visitVarStmt(VarStmt& stmt) {

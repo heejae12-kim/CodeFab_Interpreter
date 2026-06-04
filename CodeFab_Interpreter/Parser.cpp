@@ -4,9 +4,9 @@ Parser::Parser(std::vector<Token> tokens_) :
     tokens_(std::move(tokens_)) {}
 
 std::vector<StmtPtr> Parser::parse() {
-    std::vector<StmtPtr> stmts;
-    while (!isAtEnd()) stmts.push_back(declaration());
-    return stmts;
+    std::vector<StmtPtr> stmts_vector;
+    while (!isAtEnd()) stmts_vector.push_back(declaration());
+    return stmts_vector;
 }
 
 StmtPtr Parser::declaration() {
@@ -19,10 +19,10 @@ StmtPtr Parser::declaration() {
 StmtPtr Parser::varDeclaration() {
     Token name = consume(TokenType::IDENTIFIER);
     consume(TokenType::EQUAL);
-    ExprPtr init = expression();
+    ExprPtr p_init = expression();
     consume(TokenType::SEMICOLON);
     return std::make_unique<VarStmt>(std::move(name),
-        std::move(init));
+        std::move(p_init));
 }
 StmtPtr Parser::statement() {
     if (match({ TokenType::PRINT })) 
@@ -49,14 +49,21 @@ ExprPtr Parser::expression() {
 
 ExprPtr Parser::addition() {
     ExprPtr expr = primary();
+
+    // 하드코딩: * / 를 multiplication() 없이 직접 처리
+    while (tokens_[current].getTokenType() == TokenType::STAR || tokens_[current].getTokenType() == TokenType::SLASH) {
+        Token op = tokens_[current++];
+        ExprPtr rhs = primary();
+        expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(rhs));
+    }
+
     while (match({ TokenType::PLUS, TokenType::MINUS }))
     {
         Token op = previous();
-        ExprPtr right = primary();
-        expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(right));
+        ExprPtr rhs = primary();
+        expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(rhs));
     }
     return expr;
-
 }
 
 ExprPtr Parser::primary() {

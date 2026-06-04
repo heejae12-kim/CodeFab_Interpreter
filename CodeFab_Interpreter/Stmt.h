@@ -3,7 +3,6 @@
 #include <vector>
 #include <memory>
 
-// Forward declarations
 class PrintStmt;
 class ExprStmt;
 class VarStmt;
@@ -11,7 +10,6 @@ class BlockStmt;
 class IfStmt;
 class ForStmt;
 
-// ── Visitor interface ──────────────────────────────────────────────────────────
 interface StmtVisitor{
     virtual void visitPrintStmt(PrintStmt & stmt) = 0;
     virtual void visitExprStmt(ExprStmt& stmt) = 0;
@@ -22,16 +20,13 @@ interface StmtVisitor{
     virtual ~StmtVisitor() = default;
 };
 
-// ── Base Statement Node ────────────────────────────────────────────────────────
 interface Stmt{
     virtual void accept(StmtVisitor & visitor) = 0;
     virtual ~Stmt() = default;
 };
 using StmtPtr = std::unique_ptr<Stmt>;
 
-// ── Concrete Statement Nodes ───────────────────────────────────────────────────
 
-// print expr ;
 class PrintStmt : public Stmt {
 public:
     explicit PrintStmt(ExprPtr expr) : expression(std::move(expr)) {}
@@ -43,7 +38,7 @@ private:
     ExprPtr expression;
 };
 
-// expr ;
+
 class ExprStmt : public Stmt {
 public:
     explicit ExprStmt(ExprPtr expr) : expression(std::move(expr)) {}
@@ -55,7 +50,6 @@ private:
     ExprPtr expression;
 };
 
-// var name = initializer ;
 class VarStmt : public Stmt {
 public:
     VarStmt(Token name, ExprPtr init) : name(std::move(name)), initializer(std::move(init)) {}
@@ -69,7 +63,6 @@ private:
     ExprPtr initializer;
 };
 
-// { statements }
 class BlockStmt : public Stmt {
 public:
     explicit BlockStmt(std::vector<StmtPtr> stmts) : statements(std::move(stmts)) {}
@@ -81,7 +74,6 @@ private:
     std::vector<StmtPtr> statements;
 };
 
-// if ( condition ) thenBranch [else elseBranch]
 class IfStmt : public Stmt {
 public:
     IfStmt(ExprPtr cond, StmtPtr then_, StmtPtr else_)
@@ -99,7 +91,6 @@ private:
     StmtPtr elseBranch;
 };
 
-// for ( init ; condition ; increment ) body
 class ForStmt : public Stmt {
 public:
     ForStmt(StmtPtr init, ExprPtr cond, ExprPtr incr, StmtPtr body)

@@ -113,7 +113,6 @@ ExprPtr Parser::addition() {
         expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(rhs));
     }
     return expr;
-
 }
 
 ExprPtr Parser::multiplication() {

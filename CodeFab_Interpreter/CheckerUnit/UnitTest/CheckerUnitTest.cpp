@@ -2,40 +2,53 @@
 #include "../CheckerUnit.h"
 
 using std::vector;
-
 using namespace testing;
 
-TEST(CheckerUnit, EmptyProgram) {
-	CheckerUnit checker_unit;
-	vector<StmtPtr> input = {};
-	EXPECT_NO_THROW(checker_unit.doChecker(input));
+class CheckerUnitFixture : public Test
+{
+public:
+    void SetUp() override {
+        p_checker_unit = new CheckerUnit();
+    }
+
+    void TearDown() override {
+        if (p_checker_unit) delete p_checker_unit;
+        p_checker_unit = nullptr;
+    }
+protected:
+    Token makeIndentifier(const std::string& name, int line = 1) {
+        return Token(TokenType::IDENTIFIER, name, nullptr, line);
+    }
+    ExprPtr numLiteral(double value) {
+        return std::make_unique<LiteralExpr>(value);
+    }
+    StmtPtr valueDeclaration(const std::string& name, ExprPtr init = nullptr, int line = 1) {
+        return std::make_unique<VarStmt>(makeIndentifier(name, line), std::move(init));
+    }
+
+protected:
+    CheckerUnit* p_checker_unit = nullptr;
+    vector<StmtPtr> statement_vector = {};
+};
+
+TEST_F(CheckerUnitFixture, EmptyProgram) {
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
 }
 
-TEST(CheckerUnit, DeclareValue) {
-    std::vector<StmtPtr> stmts;
+TEST_F(CheckerUnitFixture, DeclareValue) {
     // var a = 1
-    auto token = Token(TokenType::IDENTIFIER, "a", nullptr, 1);
-    stmts.push_back(std::make_unique<VarStmt>(token, std::move(nullptr)));
-
-    CheckerUnit checker_unit;
-    EXPECT_NO_THROW(checker_unit.doChecker(stmts));
+    statement_vector.push_back(valueDeclaration("a", numLiteral(1.0)));
+    EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
 }
 
-TEST(CheckerUnit, DeclareDuplicateValueException) {
+TEST_F(CheckerUnitFixture, DeclareDuplicateValueException) {
     // var a = 10;
     // var a = 20;
-    std::vector<StmtPtr> stmts;
+    statement_vector.push_back(valueDeclaration("a", numLiteral(10.0), 1));
+    statement_vector.push_back(valueDeclaration("a", numLiteral(20.0), 2));
 
-    auto token1 = Token(TokenType::IDENTIFIER, "a", nullptr, 1);
-    auto token2 = Token(TokenType::IDENTIFIER, "a", nullptr, 2);
-    auto literal_expr_10 = std::make_unique<LiteralExpr>(10.0);
-    auto literal_expr_20 = std::make_unique<LiteralExpr>(20.0);
-    stmts.push_back(std::make_unique<VarStmt>(token1, std::move(literal_expr_10)));
-    stmts.push_back(std::make_unique<VarStmt>(token2, std::move(literal_expr_20)));
-
-    CheckerUnit checker_unit;
     try {
-        checker_unit.doChecker(stmts);
+        p_checker_unit->doChecker(statement_vector);
         FAIL() << "The CheckerError should occur.";
     }
     catch (const CheckerError& e) {

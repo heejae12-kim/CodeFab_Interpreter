@@ -160,6 +160,7 @@
     <ClCompile Include="Interpreter.cpp" />
     <ClCompile Include="InterpreterTest.cpp" />
     <ClCompile Include="InterpreterStmtTest.cpp" />
+    <ClCompile Include="MainPipelineTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

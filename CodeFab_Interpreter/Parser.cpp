@@ -142,6 +142,11 @@ ExprPtr Parser::primary() {
         Token tok = advance();
         return std::make_unique<VariableExpr>(std::move(tok));
     }
+    if (match({ TokenType::LEFT_PAREN })) {                              //
+            ExprPtr expr = expression();
+        consume(TokenType::RIGHT_PAREN, "Expected ')' after expression.");
+        return std::make_unique<GroupingExpr>(std::move(expr));
+    }
     throw ParseError("[line " + std::to_string(peek().getLine()) + "] Syntax Error at '" + peek().getLexme() + "': Expected expression.");
 }
 

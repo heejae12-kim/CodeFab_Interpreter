@@ -122,9 +122,15 @@ ExprPtr Parser::multiplication() {
 }
 
 ExprPtr Parser::primary() {
-    if (check(TokenType::NUMBER) || check(TokenType::STRING)) {
-        Token tok = advance();
-        return std::make_unique<LiteralExpr>(tok.getLiteral());
+    if (match({ TokenType::NUMBER })) return std::make_unique<LiteralExpr>(previous().getLiteral());
+    if (match({ TokenType::STRING })) return std::make_unique<LiteralExpr>(previous().getLiteral());
+    if (check(TokenType::TRUE_KW)) {
+        advance(); 
+        return std::make_unique<LiteralExpr>(true);
+    }
+    if (check(TokenType::FALSE_KW)) {
+        advance();
+        return std::make_unique<LiteralExpr>(false);
     }
     if (check(TokenType::IDENTIFIER)) {
         Token tok = advance();
@@ -132,7 +138,6 @@ ExprPtr Parser::primary() {
     }
     return nullptr;
 }
-
 
 bool Parser::check(TokenType t)  {
     return tokens_[current].getTokenType() == t;

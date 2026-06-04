@@ -29,6 +29,48 @@ StmtPtr Parser::statement() {
     if (match({ TokenType::PRINT }))      return printStatement();
     if (match({ TokenType::IF }))         return ifStatement();
     if (match({ TokenType::LEFT_BRACE })) return blockStatement();
+    if (tokens_[current].getTokenType() == TokenType::FOR) {
+        current++;  // FOR
+        current++;  // LEFT_PAREN
+        Token initName = tokens_[current++];
+        current++;
+        ValuableValue initVal = tokens_[current++].getLiteral();
+        current++;
+
+        StmtPtr init = std::make_unique<ExprStmt>(
+            std::make_unique<AssignExpr>(
+                std::move(initName),
+                std::make_unique<LiteralExpr>(std::move(initVal))
+            )
+        );
+        Token condLeft = tokens_[current++];
+        Token condOp = tokens_[current++];
+        ValuableValue condRight = tokens_[current++].getLiteral();  // NUMBER
+        current++;
+
+        ExprPtr cond = std::make_unique<BinaryExpr>(
+            std::make_unique<VariableExpr>(std::move(condLeft)),
+            std::move(condOp),
+            std::make_unique<LiteralExpr>(std::move(condRight))
+        );
+        Token incrName = tokens_[current++];
+        current++;
+        Token incrLeft = tokens_[current++];
+        Token incrOp = tokens_[current++];
+        ValuableValue incrRight = tokens_[current++].getLiteral();  // NUMBER
+        current++;
+
+        ExprPtr incr = std::make_unique<AssignExpr>(
+            std::move(incrName),
+            std::make_unique<BinaryExpr>(
+                std::make_unique<VariableExpr>(std::move(incrLeft)),
+                std::move(incrOp),
+                std::make_unique<LiteralExpr>(std::move(incrRight))
+            )
+        );
+        StmtPtr body = statement();  // LEFT_BRACE → blockStatement()
+        return std::make_unique<ForStmt>(std::move(init), std::move(cond), std::move(incr), std::move(body));
+    }
     return expressionStatement();
 }
 

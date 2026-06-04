@@ -8,7 +8,7 @@ using namespace testing;
 TEST(CheckerUnit, EmptyProgram) {
 	CheckerUnit checker_unit;
 	vector<StmtPtr> input = {};
-	EXPECT_NO_THROW(checker_unit.DoChecker(input));
+	EXPECT_NO_THROW(checker_unit.doChecker(input));
 }
 
 TEST(CheckerUnit, DeclareValue) {
@@ -18,7 +18,7 @@ TEST(CheckerUnit, DeclareValue) {
     stmts.push_back(std::make_unique<VarStmt>(token, std::move(nullptr)));
 
     CheckerUnit checker_unit;
-    EXPECT_NO_THROW(checker_unit.DoChecker(stmts));
+    EXPECT_NO_THROW(checker_unit.doChecker(stmts));
 }
 
 TEST(CheckerUnit, DeclareDuplicateValueException) {
@@ -35,7 +35,7 @@ TEST(CheckerUnit, DeclareDuplicateValueException) {
 
     CheckerUnit checker_unit;
     try {
-        checker_unit.DoChecker(stmts);
+        checker_unit.doChecker(stmts);
         FAIL() << "The CheckerError should occur.";
     }
     catch (const CheckerError& e) {

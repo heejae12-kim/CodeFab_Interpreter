@@ -5,12 +5,12 @@
 #include <memory>
 #include <stdexcept>
 
-struct RuntimeError : std::runtime_error {
+class RuntimeError : public std::runtime_error {
+public:
     Token token;
     RuntimeError(Token tok, const std::string& msg)
         : std::runtime_error(msg), token(std::move(tok)) {}
 };
-
 
 class Environment {
 public:

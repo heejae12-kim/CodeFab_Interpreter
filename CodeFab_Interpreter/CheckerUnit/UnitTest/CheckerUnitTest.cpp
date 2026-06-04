@@ -121,3 +121,21 @@ TEST_F(CheckerUnitFixture, BinaryExpressiongAddition) {
 
 	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
 }
+
+TEST_F(CheckerUnitFixture, SelfInitializerThrows) {
+	// { var a = a; }
+	std::vector<StmtPtr> inner;
+	inner.push_back(std::make_unique<VarStmt>(
+		makeIndentifier("a", 1),
+		std::make_unique<VariableExpr>(makeIndentifier("a", 1))
+	));
+	statement_vector.push_back(makeBlockStatement(std::move(inner)));
+
+	try {
+		p_checker_unit->doChecker(statement_vector);
+		FAIL() << "The CheckerError should occur.";
+	}
+	catch (const CheckerError& e) {
+		EXPECT_THAT(std::string(e.what()), HasSubstr("Can't read local variable in its own initializer"));
+	}
+}

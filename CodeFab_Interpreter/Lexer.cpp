@@ -32,11 +32,11 @@ char Lexer::advance() {
 }
 
 char Lexer::peek() const {
-    return isAtEnd() ? '\0' : source_[current_];
+    return isAtEnd() ? NULL_CHARACTER : source_[current_];
 }
 
 char Lexer::peekNext() const {
-    if (current_ + 1 >= static_cast<int>(source_.size())) return '\0';
+    if (current_ + 1 >= static_cast<int>(source_.size())) return NULL_CHARACTER;
     return source_[current_ + 1];
 }
 
@@ -57,13 +57,7 @@ void Lexer::scanToken() {
     case '+': addToken(TokenType::PLUS);        break;
     case '-': addToken(TokenType::MINUS);       break;
     case '*': addToken(TokenType::STAR);        break;
-    case '/':
-        if (match('/')) {
-            while (!isAtEnd() && peek() != '\n') advance();
-        } else {
-            addToken(TokenType::SLASH);
-        }
-        break;
+    case '/': scanSlashOrComment(); break;
     case '<': addToken(match('=') ? TokenType::LESS_EQUAL    : TokenType::LESS);    break;
     case '>': addToken(match('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER); break;
     case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL   : TokenType::EQUAL);   break;
@@ -86,6 +80,14 @@ void Lexer::scanToken() {
             throw LexError(line_, std::string("unexpected character '") + c + "'");
         }
         break;
+    }
+}
+
+void Lexer::scanSlashOrComment() {
+    if (match('/')) {
+        while (!isAtEnd() && peek() != '\n') advance();
+    } else {
+        addToken(TokenType::SLASH);
     }
 }
 
@@ -115,19 +117,15 @@ void Lexer::scanNumber() {
 void Lexer::scanIdentifierOrKeyword() {
     while (!isAtEnd() && (std::isalnum(static_cast<unsigned char>(peek())) || peek() == '_')) advance();
     std::string text = source_.substr(start_, current_ - start_);
-    auto it = keywords.find(text);
-    if (it == keywords.end()) {
+    auto found_token = keywords.find(text);
+    if (found_token == keywords.end()) {
         addToken(TokenType::IDENTIFIER);
         return;
     }
-    TokenType type = it->second;
+    TokenType type = found_token->second;
     if (type == TokenType::TRUE_KW)       addToken(type, true);
     else if (type == TokenType::FALSE_KW) addToken(type, false);
     else                                  addToken(type);
-}
-
-void Lexer::addToken(TokenType type) {
-    addToken(type, nullptr);
 }
 
 void Lexer::addToken(TokenType type, ValuableValue literal) {

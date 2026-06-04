@@ -37,10 +37,12 @@ private:
     bool match(char expected);
 
     void scanToken();
+    void scanSlashOrComment();
     void scanString();
     void scanNumber();
     void scanIdentifierOrKeyword();
 
-    void addToken(TokenType type);
-    void addToken(TokenType type, ValuableValue literal);
+    void addToken(TokenType type, ValuableValue literal = nullptr);
+
+    static constexpr char NULL_CHARACTER = '\0';
 };

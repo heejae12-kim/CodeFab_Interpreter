@@ -106,5 +106,12 @@ void CheckerUnit::visitIfStmt(IfStmt& stmt) {
 }
 
 void CheckerUnit::visitForStmt(ForStmt& stmt) {
+	addBeginBlockScope();
 
+	if (stmt.getInitializer()) checkStatement(*stmt.getInitializer());
+	if (stmt.getCondition())   checkExpression(*stmt.getCondition());
+	if (stmt.getIncrement())   checkExpression(*stmt.getIncrement());
+	checkStatement(*stmt.getBody());
+
+	addEndBlockScope();
 }

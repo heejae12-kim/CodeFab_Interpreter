@@ -177,3 +177,32 @@ TEST_F(CheckerUnitFixture, IfStmtBinaryExpressiongInCondition) {
 
 	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
 }
+
+
+TEST_F(CheckerUnitFixture, ForStmtFullLoop) {
+	// for (var i = 0; i < 3; i = i + 1) { print i; }
+	std::vector<StmtPtr> body;
+	body.push_back(std::make_unique<PrintStmt>(
+		std::make_unique<VariableExpr>(makeIndentifier("i"))
+	));
+
+	statement_vector.push_back(std::make_unique<ForStmt>(
+		valueDeclaration("i", numLiteral(0.0)),
+		std::make_unique<BinaryExpr>(
+			std::make_unique<VariableExpr>(makeIndentifier("i")),
+			Token(TokenType::LESS, "<", nullptr, 1),
+			numLiteral(3.0)
+		),
+		std::make_unique<AssignExpr>(
+			makeIndentifier("i"),
+			std::make_unique<BinaryExpr>(
+				std::make_unique<VariableExpr>(makeIndentifier("i")),
+				Token(TokenType::PLUS, "+", nullptr, 1),
+				numLiteral(1.0)
+			)
+		),
+		makeBlockStatement(std::move(body))
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}

@@ -27,7 +27,6 @@
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-<<<<<<< HEAD
     <ClCompile Include="test_lexer.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -52,14 +51,15 @@
     <ClCompile Include="CheckerUnit\UnitTest\CheckerUnitTest.cpp">
       <Filter>소스 파일\CheckerUnit\UnitTest</Filter>
     </ClCompile>
-=======
     <ClCompile Include="Parser.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="ParserTest.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
->>>>>>> 60839fb ([feature] Implement print statement.)
+    <ClCompile Include="ParseErrorTest.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -77,16 +77,14 @@
     <ClInclude Include="Token.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-<<<<<<< HEAD
     <ClInclude Include="CheckerUnit\CheckerUnit.h">
       <Filter>소스 파일\CheckerUnit</Filter>
     </ClInclude>
     <ClInclude Include="CheckerUnit\CheckerError.h">
       <Filter>소스 파일\CheckerUnit</Filter>
-=======
+    </ClInclude>
     <ClInclude Include="Parser.h">
       <Filter>헤더 파일</Filter>
->>>>>>> 60839fb ([feature] Implement print statement.)
     </ClInclude>
   </ItemGroup>
 </Project>

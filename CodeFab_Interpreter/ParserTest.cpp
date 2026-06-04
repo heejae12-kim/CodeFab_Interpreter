@@ -365,3 +365,111 @@ TEST(ParserTest, IfElseStatement) {
         stmts[1]->accept(mock);
     }
 }
+
+
+TEST(ParserTest, ForStatement) {
+    std::vector<Token> tokens = {
+        // var a;
+        Token(TokenType::VAR,         "var", nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "a",nullptr, 1),
+        Token(TokenType::SEMICOLON,   ";", nullptr, 1),
+// for (a = 0; a < 4; a = a + 1) {
+        Token(TokenType::FOR,         "for", nullptr, 2),
+        Token(TokenType::LEFT_PAREN,  "(", nullptr, 2),
+        Token(TokenType::IDENTIFIER,  "a", nullptr, 2),
+        Token(TokenType::EQUAL,       "=", nullptr, 2),
+        Token(TokenType::NUMBER,      "0", 0.0,  2),
+        Token(TokenType::SEMICOLON,   ";", nullptr, 2),
+        Token(TokenType::IDENTIFIER,  "a", nullptr, 2),
+        Token(TokenType::LESS,        "<", nullptr, 2),
+        Token(TokenType::NUMBER,      "4", 4.0,  2),
+        Token(TokenType::SEMICOLON,   ";", nullptr, 2),
+        Token(TokenType::IDENTIFIER,  "a", nullptr, 2),
+        Token(TokenType::EQUAL,       "=", nullptr, 2),
+        Token(TokenType::IDENTIFIER,  "a", nullptr, 2),
+        Token(TokenType::PLUS,        "+", nullptr, 2),
+        Token(TokenType::NUMBER,      "1", 1.0,  2),
+        Token(TokenType::RIGHT_PAREN, ")", nullptr, 2),
+        Token(TokenType::LEFT_BRACE,  "{", nullptr, 2),
+// print a;
+        Token(TokenType::PRINT,       "print", nullptr, 3),
+        Token(TokenType::IDENTIFIER,  "a", nullptr, 3),
+        Token(TokenType::SEMICOLON,   ";", nullptr, 3),
+        Token(TokenType::RIGHT_BRACE, "}", nullptr, 3),
+        Token(TokenType::EOF_TOKEN,   "", nullptr, 3),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 2u);
+
+    // var a; (초기화 없음)
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "a");
+            EXPECT_EQ(stmt.getInitializer(), nullptr);
+            });
+        stmts[0]->accept(mock);
+    }
+
+    // for (a = 0; a < 4; a = a + 1) { print a; }
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitForStmt(testing::_))
+            .WillOnce([](ForStmt& stmt) {
+            // initializer: a = 0
+            auto* initStmt = dynamic_cast<ExprStmt*>(stmt.getInitializer().get());
+            ASSERT_NE(initStmt, nullptr);
+            auto* assign = dynamic_cast<AssignExpr*>(initStmt->getExpression().get());
+            ASSERT_NE(assign, nullptr);
+
+            EXPECT_EQ(assign->getName().getLexme(), "a");
+            auto* initVal = dynamic_cast<LiteralExpr*>(assign->getValue().get());
+            ASSERT_NE(initVal, nullptr);
+            EXPECT_DOUBLE_EQ(std::get<double>(initVal->getValue()), 0.0);
+
+            // condition: a < 4
+            auto* cond = dynamic_cast<BinaryExpr*>(stmt.getCondition().get());
+            ASSERT_NE(cond, nullptr);
+
+            EXPECT_EQ(cond->getOp().getTokenType(), TokenType::LESS);
+            auto* condLeft = dynamic_cast<VariableExpr*>(cond->getLeft().get());
+            ASSERT_NE(condLeft, nullptr);
+
+            EXPECT_EQ(condLeft->getName().getLexme(), "a");
+            auto* condRight = dynamic_cast<LiteralExpr*>(cond->getRight().get());
+            ASSERT_NE(condRight, nullptr);
+            EXPECT_DOUBLE_EQ(std::get<double>(condRight->getValue()), 4.0);
+
+            // increment: a = a + 1
+            auto* incr = dynamic_cast<AssignExpr*>(stmt.getIncrement().get());
+            ASSERT_NE(incr, nullptr);
+            EXPECT_EQ(incr->getName().getLexme(), "a");
+            auto* incrBin = dynamic_cast<BinaryExpr*>(incr->getValue().get());
+            ASSERT_NE(incrBin, nullptr);
+
+            EXPECT_EQ(incrBin->getOp().getTokenType(), TokenType::PLUS);
+            auto* incrLeft = dynamic_cast<VariableExpr*>(incrBin->getLeft().get());
+            ASSERT_NE(incrLeft, nullptr);
+
+            EXPECT_EQ(incrLeft->getName().getLexme(), "a");
+            auto* incrRight = dynamic_cast<LiteralExpr*>(incrBin->getRight().get());
+            ASSERT_NE(incrRight, nullptr);
+            EXPECT_DOUBLE_EQ(std::get<double>(incrRight->getValue()), 1.0);
+
+            // body: { print a; }
+            auto* body = dynamic_cast<BlockStmt*>(stmt.getBody().get());
+            ASSERT_NE(body, nullptr);
+            ASSERT_EQ(body->getStatements().size(), 1u);
+            auto* print = dynamic_cast<PrintStmt*>(body->getStatements()[0].get());
+            ASSERT_NE(print, nullptr);
+            auto* printVar = dynamic_cast<VariableExpr*>(print->getExpression().get());
+            ASSERT_NE(printVar, nullptr);
+            EXPECT_EQ(printVar->getName().getLexme(), "a");
+            });
+        stmts[1]->accept(mock);
+    }
+}

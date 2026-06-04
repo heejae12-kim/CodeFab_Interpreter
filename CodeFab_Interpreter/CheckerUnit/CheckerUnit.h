@@ -17,7 +17,7 @@ public:
 	void doChecker(vector<StmtPtr>& statements_tree_vector);
 
 private:
-	void checkBlcok(const std::vector<StmtPtr>& statements_tree_vector);
+	void checkBlock(const std::vector<StmtPtr>& statements_tree_vector);
 	void checkStatement(Stmt& statements_node);
 	void checkExpression(Expr& expression_node);
 	void addBeginBlockScope();

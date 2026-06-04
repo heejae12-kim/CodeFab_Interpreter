@@ -2,6 +2,11 @@
 #include "Stmt.h"
 #include <vector>
 #include <initializer_list>
+#include <stdexcept>
+
+struct ParseError : std::runtime_error {
+	explicit ParseError(const std::string& msg) : std::runtime_error(msg) {}
+};
 
 class Parser {
 public:

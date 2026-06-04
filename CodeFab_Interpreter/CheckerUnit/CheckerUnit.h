@@ -9,9 +9,9 @@ using std::vector;
 using std::string;
 using std::unordered_map;
 
-class CheckerUnit: 
+class CheckerUnit :
 	public ExprVisitor
-	,public StmtVisitor
+	, public StmtVisitor
 {
 public:
 	void doChecker(vector<StmtPtr>& statements_tree_vector);
@@ -49,5 +49,4 @@ private:
 
 private:
 	vector<unordered_map<string, bool>> check_values_in_scopes_vector;
-
 };

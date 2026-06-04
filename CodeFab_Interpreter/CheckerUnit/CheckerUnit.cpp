@@ -26,7 +26,7 @@ void CheckerUnit::declareValue(const Token& name) {
 }
 
 void CheckerUnit::defineValue(const Token& name) {
-	if (!check_values_in_scopes_vector.empty()) 
+	if (!check_values_in_scopes_vector.empty())
 		check_values_in_scopes_vector.back()[name.getLexme()] = true;
 }
 
@@ -43,6 +43,8 @@ void CheckerUnit::checkStatement(Stmt& statements_node) {
 void CheckerUnit::checkExpression(Expr& expression_node) {
 	expression_node.accept(*this);
 }
+
+#pragma region ExprVisitor
 
 ValuableValue CheckerUnit::visitLiteralExpr(LiteralExpr& expr) {
 	return nullptr;
@@ -82,8 +84,10 @@ ValuableValue CheckerUnit::visitAssignExpr(AssignExpr& expr) {
 	return nullptr;
 }
 
+#pragma endregion
 
-//// StmtVisitor
+#pragma region StmtVisitor
+
 void CheckerUnit::visitPrintStmt(PrintStmt& stmt) {
 	checkExpression(*stmt.getExpression());
 }
@@ -94,7 +98,7 @@ void CheckerUnit::visitExprStmt(ExprStmt& stmt) {
 
 void CheckerUnit::visitVarStmt(VarStmt& stmt) {
 	declareValue(stmt.getName());
-	if(stmt.getInitializer()) checkExpression(*stmt.getInitializer());
+	if (stmt.getInitializer()) checkExpression(*stmt.getInitializer());
 	defineValue(stmt.getName());
 }
 
@@ -122,3 +126,5 @@ void CheckerUnit::visitForStmt(ForStmt& stmt) {
 
 	addEndBlockScope();
 }
+
+#pragma endregion

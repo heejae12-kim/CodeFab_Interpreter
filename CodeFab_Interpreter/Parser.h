@@ -4,7 +4,8 @@
 #include <initializer_list>
 #include <stdexcept>
 
-struct ParseError : std::runtime_error {
+class ParseError : std::runtime_error {
+public:
 	explicit ParseError(const std::string& msg) : std::runtime_error(msg) {}
 };
 

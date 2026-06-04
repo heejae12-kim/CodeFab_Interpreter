@@ -58,7 +58,6 @@ StmtPtr Parser::forStatement() {
     return std::make_unique<ForStmt>(std::move(init), std::move(cond), std::move(incr), std::move(body));
 }
 
-
 StmtPtr Parser::blockStatement() {
     std::vector<StmtPtr> stmts;
     while (!check(TokenType::RIGHT_BRACE) && !isAtEnd())
@@ -87,7 +86,6 @@ ExprPtr Parser::assignment() {
     return expr;
 }
 
-
 ExprPtr Parser::comparison() {
     ExprPtr expr = addition();
     while (match({ TokenType::LESS, TokenType::LESS_EQUAL,
@@ -99,7 +97,6 @@ ExprPtr Parser::comparison() {
     }
     return expr;
 }
-
 
 ExprPtr Parser::addition() {
     ExprPtr expr = multiplication();
@@ -124,9 +121,8 @@ ExprPtr Parser::multiplication() {
     return expr;
 }
 
-
 ExprPtr Parser::primary() {
-    if (check(TokenType::NUMBER)) {
+    if (check(TokenType::NUMBER) || check(TokenType::STRING)) {
         Token tok = advance();
         return std::make_unique<LiteralExpr>(tok.getLiteral());
     }
@@ -141,9 +137,11 @@ ExprPtr Parser::primary() {
 bool Parser::check(TokenType t)  {
     return tokens_[current].getTokenType() == t;
 }
+
 bool Parser::isAtEnd()  {
     return tokens_[current].getTokenType() == TokenType::EOF_TOKEN;
 }
+
 Token& Parser::advance() {
     if (!isAtEnd()) ++current;
     return tokens_[current - 1];
@@ -152,6 +150,7 @@ Token& Parser::advance() {
 Token& Parser::peek() { 
     return tokens_[current]; 
 }
+
 Token& Parser::previous() {
     return tokens_[current -1];
 }
@@ -167,8 +166,9 @@ bool Parser::match(std::initializer_list<TokenType>
     return false;
 }
 
-Token   Parser::consume(TokenType type)
+Token Parser::consume(TokenType type)
 {
     if (check(type)) return advance();
     return peek();
 }
+

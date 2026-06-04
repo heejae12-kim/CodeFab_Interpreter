@@ -4,10 +4,9 @@
 #include <memory>
 #include <vector>
 
-// Executor Unit (PDF Chapter 04) — 트리-워크 인터프리터.
-// 문법 트리(Stmt/Expr 조립체)를 DFS 로 재귀 평가하여 실제로 실행한다.
-//   - Expr 방문 : 값을 평가하여 ValuableValue 반환
-//   - Stmt 방문 : 동작 수행 (void), print 는 std::cout 으로 출력
+// Stmt/Expr를 DFS 실행한다.
+//   - Expr : 값을 평가하여 ValuableValue 반환
+//   - Stmt : 동작 수행 (void), print로 출력
 class Interpreter : public ExprVisitor, public StmtVisitor {
 public:
     Interpreter();
@@ -27,7 +26,6 @@ private:
     void checkNumberOperand(const Token& op, const ValuableValue& operand);
     void checkNumberOperands(const Token& op, const ValuableValue& left, const ValuableValue& right);
 
-    // ExprVisitor
     ValuableValue visitLiteralExpr(LiteralExpr& expr) override;
     ValuableValue visitUnaryExpr(UnaryExpr& expr) override;
     ValuableValue visitBinaryExpr(BinaryExpr& expr) override;
@@ -35,7 +33,6 @@ private:
     ValuableValue visitVariableExpr(VariableExpr& expr) override;
     ValuableValue visitAssignExpr(AssignExpr& expr) override;
 
-    // StmtVisitor
     void visitPrintStmt(PrintStmt& stmt) override;
     void visitExprStmt(ExprStmt& stmt) override;
     void visitVarStmt(VarStmt& stmt) override;

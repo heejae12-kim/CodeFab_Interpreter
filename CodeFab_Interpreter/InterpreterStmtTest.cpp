@@ -13,7 +13,6 @@ namespace {
     }
 }
 
-// ── 변수 ────────────────────────────────────────────────────────────────────
 TEST(InterpreterStmtTest, VariableDeclareAndUse) {
     // var a = 10; print a + 5;  → 15
     EXPECT_EQ(run(stmts(
@@ -43,7 +42,6 @@ TEST(InterpreterStmtTest, AssignToUndefinedThrows) {
     EXPECT_THROW(run(stmts(exprStmt(assign("x", litNum(1.0))))), RuntimeError);
 }
 
-// ── print 출력 형식 ─────────────────────────────────────────────────────────
 TEST(InterpreterStmtTest, PrintStringBoolNil) {
     EXPECT_EQ(run(stmts(
         printStmt(litStr("hello")),
@@ -51,9 +49,7 @@ TEST(InterpreterStmtTest, PrintStringBoolNil) {
         printStmt(litNil()))), "hello\ntrue\nnil\n");
 }
 
-// ── 블록 스코프 ─────────────────────────────────────────────────────────────
 TEST(InterpreterStmtTest, BlockScopeDoesNotLeak) {
-    // { var b = 1; }  이후 b 참조 → 미정의
     EXPECT_THROW(run(stmts(
         blockStmt(stmts(varStmt("b", litNum(1.0)))),
         exprStmt(variable("b")))), RuntimeError);
@@ -75,7 +71,6 @@ TEST(InterpreterStmtTest, BlockShadowsThenRestoresOuter) {
         printStmt(variable("a")))), "2\n1\n");
 }
 
-// ── if ──────────────────────────────────────────────────────────────────────
 TEST(InterpreterStmtTest, IfExecutesThenWhenTrue) {
     EXPECT_EQ(run(stmts(ifStmt(litBool(true),
         printStmt(litNum(1.0)),
@@ -92,7 +87,6 @@ TEST(InterpreterStmtTest, IfWithoutElseSkipsWhenFalse) {
     EXPECT_EQ(run(stmts(ifStmt(litBool(false), printStmt(litNum(1.0))))), "");
 }
 
-// ── for ─────────────────────────────────────────────────────────────────────
 TEST(InterpreterStmtTest, ForLoopRepeatsBody) {
     // for (var i = 0; i < 3; i = i + 1) { print "#"; }  → "#\n#\n#\n"
     EXPECT_EQ(run(stmts(forStmt(
@@ -103,7 +97,6 @@ TEST(InterpreterStmtTest, ForLoopRepeatsBody) {
 }
 
 TEST(InterpreterStmtTest, ForLoopVariableScopedToLoop) {
-    // 루프 종료 후 i 참조 → 미정의
     EXPECT_THROW(run(stmts(
         forStmt(
             varStmt("i", litNum(0.0)),

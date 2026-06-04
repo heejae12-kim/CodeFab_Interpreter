@@ -52,7 +52,10 @@ StmtPtr Parser::ifStatement() {
 
 StmtPtr Parser::forStatement() {
     consume(TokenType::LEFT_PAREN, "Expected '(' after 'for'.");
-    StmtPtr init = expressionStatement();
+    StmtPtr init;
+    if (match({ TokenType::VAR })) init = varDeclaration();
+    else init = expressionStatement();
+
     ExprPtr cond = comparison();
     consume(TokenType::SEMICOLON, "Expected ';' after for condition.");
     ExprPtr incr = assignment();

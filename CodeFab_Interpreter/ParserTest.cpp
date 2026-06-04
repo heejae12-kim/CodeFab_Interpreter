@@ -184,3 +184,90 @@ TEST(ParserTest, MultipleVarAndPrint) {
         stmts[3]->accept(mock);
     }
 }
+
+TEST(ParserTest, IfStatement) {
+    std::vector<Token> tokens = {
+        // var a = 5;
+        Token(TokenType::VAR,         "var",   nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 1),
+        Token(TokenType::EQUAL,       "=",     nullptr, 1),
+        Token(TokenType::NUMBER,      "5",     5.0,     1),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 1),
+        // if (a > 1) {
+        Token(TokenType::IF,          "if",    nullptr, 2),
+        Token(TokenType::LEFT_PAREN,  "(",     nullptr, 2),
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 2),
+        Token(TokenType::GREATER,     ">",     nullptr, 2),
+        Token(TokenType::NUMBER,      "1",     1.0,     2),
+        Token(TokenType::RIGHT_PAREN, ")",     nullptr, 2),
+        Token(TokenType::LEFT_BRACE,  "{",     nullptr, 2),
+        // print 3;
+        Token(TokenType::PRINT,       "print", nullptr, 3),
+        Token(TokenType::NUMBER,      "3",     3.0,     3),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 3),
+        // }
+        Token(TokenType::RIGHT_BRACE, "}",     nullptr, 4),
+        Token(TokenType::EOF_TOKEN,   "",      nullptr, 4),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 2u);
+
+    // var a = 5;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "a");
+            auto* lit =
+                dynamic_cast<LiteralExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(lit, nullptr);
+            EXPECT_DOUBLE_EQ(std::get<double>(lit->getValue()),
+                5.0);
+                });
+        stmts[0]->accept(mock);
+    }
+
+    // if (a > 1) { print 3; }
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitIfStmt(testing::_))
+            .WillOnce([](IfStmt& stmt) {
+            // condition: a > 1
+            auto* cond =
+                dynamic_cast<BinaryExpr*>(stmt.getCondition().get());
+            ASSERT_NE(cond, nullptr);
+            EXPECT_EQ(cond->getOp().getTokenType(),
+                TokenType::GREATER);
+
+            auto* left =
+                dynamic_cast<VariableExpr*>(cond->getLeft().get());
+            ASSERT_NE(left, nullptr);
+            EXPECT_EQ(left->getName().getLexme(), "a");
+
+            auto* right =
+                dynamic_cast<LiteralExpr*>(cond->getRight().get());
+            ASSERT_NE(right, nullptr);
+            EXPECT_DOUBLE_EQ(std::get<double>(right->getValue()),
+                1.0);
+
+            // thenBranch: { print 3; }
+            auto* block =
+                dynamic_cast<BlockStmt*>(stmt.getThenBranch().get());
+            ASSERT_NE(block, nullptr);
+            ASSERT_EQ(block->getStatements().size(), 1u);
+
+            auto* print = dynamic_cast<PrintStmt*>(block->getStatements()[0].get());
+            ASSERT_NE(print, nullptr);
+            auto* lit = dynamic_cast<LiteralExpr*>(print->getExpression().get());
+            ASSERT_NE(lit, nullptr);
+            EXPECT_DOUBLE_EQ(std::get<double>(lit->getValue()), 3.0);
+
+            // elseBranch 없음
+            EXPECT_EQ(stmt.getElseBranch(), nullptr);
+            });
+        stmts[1]->accept(mock);
+    }
+}

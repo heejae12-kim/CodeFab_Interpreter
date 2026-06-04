@@ -25,9 +25,35 @@ StmtPtr Parser::varDeclaration() {
         std::move(p_init));
 }
 StmtPtr Parser::statement() {
-    if (match({ TokenType::PRINT })) 
-        return printStatement();
+    if (match({ TokenType::PRINT })) return printStatement();
+
+    if (tokens_[current].getTokenType() == TokenType::IF) {
+        current++;                              // IF
+        current++;                              // LEFT_PAREN
+
+        Token condLeft = tokens_[current++];    // IDENTIFIER
+        Token condOp = tokens_[current++];      // GREATER / 비교 연산자
+        Token condRight = tokens_[current++];   // NUMBER
+        current++;                              // RIGHT_PAREN
+
+        ExprPtr cond = std::make_unique<BinaryExpr>(
+            std::make_unique<VariableExpr>(std::move(condLeft)),
+            std::move(condOp),
+            std::make_unique<LiteralExpr>(condRight.getLiteral())
+        );
+
+        current++;                              // LEFT_BRACE
+        std::vector<StmtPtr> blockStmts;
+        while (tokens_[current].getTokenType() != TokenType::RIGHT_BRACE)
+            blockStmts.push_back(declaration());
+        current++;                              // RIGHT_BRACE
+
+        StmtPtr thenBranch =std::make_unique<BlockStmt>(std::move(blockStmts));
+        return std::make_unique<IfStmt>(std::move(cond), std::move(thenBranch), nullptr);
+    }
+
     return expressionStatement();
+
 }
 
 StmtPtr Parser::printStatement() {

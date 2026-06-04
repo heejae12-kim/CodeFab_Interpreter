@@ -62,5 +62,8 @@
     <ClInclude Include="CheckerUnit\CheckerUnit.h">
       <Filter>소스 파일\CheckerUnit</Filter>
     </ClInclude>
+    <ClInclude Include="CheckerUnit\CheckerError.h">
+      <Filter>소스 파일\CheckerUnit</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

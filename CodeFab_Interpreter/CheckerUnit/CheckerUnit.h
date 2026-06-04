@@ -10,8 +10,8 @@ using std::string;
 using std::unordered_map;
 
 class CheckerUnit :
-	public ExprVisitor
-	, public StmtVisitor
+	public ExprVisitor,
+	public StmtVisitor
 {
 public:
 	void doChecker(vector<StmtPtr>& statements_tree_vector);

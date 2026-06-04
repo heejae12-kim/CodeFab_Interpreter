@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{ede9b1ff-a566-4f35-a37f-6e1520b8d43f}</ProjectGuid>
+    <ProjectGuid>{B94DAF04-B9F5-D38E-12CD-2516ED7BDD8F}</ProjectGuid>
     <RootNamespace>CodeFabInterpreter</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -150,10 +150,11 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'"> %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ParseErrorTest.cpp" />
     <ClCompile Include="test_lexer.cpp" />
     <ClCompile Include="Parser.cpp" />
-    <ClCompile Include="ParserTest.cpp" />
+    <ClCompile Include="ParserTest.cpp">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'"> %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
     <ClCompile Include="Environment.cpp" />
     <ClCompile Include="EnvironmentTest.cpp" />
     <ClCompile Include="Interpreter.cpp" />

@@ -2,11 +2,6 @@
 #include "Stmt.h"
 #include <vector>
 #include <initializer_list>
-#include <stdexcept>
-
-struct ParseError : std::runtime_error {
-	explicit ParseError(const std::string& msg) : std::runtime_error(msg) {}
-};
 
 class Parser {
 public:
@@ -21,16 +16,8 @@ private:
 	StmtPtr varDeclaration();
 	StmtPtr statement();
 	StmtPtr expressionStatement();
-	StmtPtr printStatement();
-	StmtPtr ifStatement();
-	StmtPtr forStatement();
-	StmtPtr blockStatement();
 
 	ExprPtr expression();
-	ExprPtr assignment();
-	ExprPtr comparison();
-	ExprPtr addition();
-	ExprPtr multiplication();
 	ExprPtr primary();
 
 	bool match(std::initializer_list<TokenType> types);
@@ -39,5 +26,5 @@ private:
 	Token& peek();
 	bool isAtEnd();
 	Token& previous();
-	Token consume(TokenType type, const std::string& msg);
+	Token consume(TokenType type);
 };

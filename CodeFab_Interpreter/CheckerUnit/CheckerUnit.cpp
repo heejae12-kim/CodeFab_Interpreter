@@ -44,6 +44,20 @@ void CheckerUnit::defineValue(const Token& name) {
 		check_values_in_scopes_vector.back()[name.getLexme()] = true;
 }
 
+void CheckerUnit::updateValueDistance(Expr& expr, const Token& name) {
+	int distance = 0;
+	for (auto scope_iter = check_values_in_scopes_vector.rbegin();
+		scope_iter != check_values_in_scopes_vector.rend(); ++scope_iter, ++distance) {
+		if (scope_iter->count(name.getLexme())) {
+			auto p_variable_expr = dynamic_cast<VariableExpr*>(&expr);
+			auto p_assign_expr = dynamic_cast<AssignExpr*>(&expr);
+			if (p_variable_expr) p_variable_expr->setDistance(distance);
+			else if (p_assign_expr) p_assign_expr->setDistance(distance);
+			return;
+		}
+	}
+}
+
 #pragma region ExprVisitor
 
 ValuableValue CheckerUnit::visitLiteralExpr(LiteralExpr& expr) {
@@ -76,11 +90,17 @@ ValuableValue CheckerUnit::visitVariableExpr(VariableExpr& expr) {
 			throw CheckerError("[line " + std::to_string(expr.getName().getLine()) +
 				"] Checker Error: Can't read local variable in its own initializer.");
 	}
+#ifdef USE_DISTANCE_OPTIMIZE
+	updateValueDistance(expr, expr.getName());
+#endif
 	return nullptr;
 }
 
 ValuableValue CheckerUnit::visitAssignExpr(AssignExpr& expr) {
 	checkExpression(*expr.getValue());
+#ifdef USE_DISTANCE_OPTIMIZE
+	updateValueDistance(expr, expr.getName());
+#endif
 	return nullptr;
 }
 

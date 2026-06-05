@@ -83,11 +83,31 @@ ExprPtr Parser::expression() {
 }
 
 ExprPtr Parser::assignment() {
-    ExprPtr expr = comparison();
+    ExprPtr expr = logicalOr();
     if (match({ TokenType::EQUAL })) {
         ExprPtr val = assignment();
         if (auto* var = dynamic_cast<VariableExpr*>(expr.get()))
             return std::make_unique<AssignExpr>(var->getName(), std::move(val));
+    }
+    return expr;
+}
+
+ExprPtr Parser::logicalOr() {
+    ExprPtr expr = logicalAnd();
+    while (match({ TokenType::OR_OP })) {
+        Token op = previous();
+        ExprPtr rhs = logicalAnd();
+        expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(rhs));
+    }
+    return expr;
+}
+
+ExprPtr Parser::logicalAnd() {
+    ExprPtr expr = comparison();
+    while (match({ TokenType::AND_OP })) {
+        Token op = previous();
+        ExprPtr rhs = comparison();
+        expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(rhs));
     }
     return expr;
 }

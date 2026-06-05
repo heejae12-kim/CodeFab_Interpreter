@@ -29,6 +29,8 @@ private:
 
 	ExprPtr expression();
 	ExprPtr assignment();
+	ExprPtr logicalOr();
+	ExprPtr logicalAnd();
 	ExprPtr comparison();
 	ExprPtr addition();
 	ExprPtr multiplication();

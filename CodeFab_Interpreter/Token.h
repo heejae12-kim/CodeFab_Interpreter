@@ -6,6 +6,7 @@ enum class TokenType {
     // Single-char tokens
     LEFT_PAREN, RIGHT_PAREN,
     LEFT_BRACE, RIGHT_BRACE,
+    LEFT_BRACKET, RIGHT_BRACKET,
     SEMICOLON,
     PLUS, MINUS, STAR, SLASH,
     COMMA,

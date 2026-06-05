@@ -280,4 +280,58 @@ case '!': addToken(match('=') ? TokenType::BANG_EQUAL : TokenType::BANG); break;
 
 ---
 
+## 세션 014 — 배열 지원 Token/Lexer 수정 (2026-06-05)
+
+### 커밋
+```
+(이번 커밋에 포함)
+```
+
+### 사용자 프롬프트 원문
+```
+추가 기능 중에 array 지원해야 하는 것도 있어, 하나의 PR request 로 진행할
+예정이라 지금 git 에서 추가 구현을 해줘. 같은 작업을 하면 돼.
+```
+
+### 주목적
+Chapter 3 정적 배열 요구사항에 따라 인덱스 접근에 필요한 `[`, `]` 토큰을 추가한다.
+
+### 변경 파일
+| 파일 | 변경 유형 | 내용 |
+|------|-----------|------|
+| `Token.h` | 수정 | `LEFT_BRACKET`, `RIGHT_BRACKET` 2개 TokenType 추가 |
+| `Lexer.cpp` | 수정 | `scanToken()`에 `'['→LEFT_BRACKET`, `']'→RIGHT_BRACKET` 처리 추가 |
+
+### 변경 상세
+
+#### Token.h
+```cpp
+// Single-char tokens에 추가
+LEFT_BRACKET, RIGHT_BRACKET,
+```
+
+#### Lexer.cpp — scanToken()
+```cpp
+case '[': addToken(TokenType::LEFT_BRACKET);  break;
+case ']': addToken(TokenType::RIGHT_BRACKET); break;
+```
+
+### 테스트 결과
+```
+[==========] Running 86 tests from 7 test suites.
+[  PASSED  ] 86 tests.
+```
+
+### 현재 TDD 단계
+```
+[RED]      테스트 케이스 미추가 (배열 관련 TC 작성 예정)
+[GREEN]    기존 86개 전부 통과 확인
+[REFACTOR] 미착수
+```
+
+### 다음 세션 목표
+PR 생성 후 팀원 코드 리뷰 진행.
+
+---
+
 *이 문서는 세션이 종료될 때마다 새 세션 항목을 추가하여 누적 관리한다.*

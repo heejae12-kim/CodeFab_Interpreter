@@ -43,7 +43,7 @@ public:
     ValuableValue accept(ExprVisitor& v) override { return v.visitUnaryExpr(*this); }
 
     const Token& getOp()    const { return op; }
-    const ExprPtr& getRight() const { return right; }
+    ExprPtr& getRight() { return right; }
 
 private:
     Token   op;
@@ -57,9 +57,9 @@ public:
     }
     ValuableValue accept(ExprVisitor& v) override { return v.visitBinaryExpr(*this); }
 
-    const ExprPtr& getLeft()  const { return left; }
+    ExprPtr& getLeft()  { return left; }
     const Token& getOp()    const { return op; }
-    const ExprPtr& getRight() const { return right; }
+    ExprPtr& getRight() { return right; }
 
 private:
     ExprPtr left;
@@ -73,7 +73,7 @@ public:
     explicit GroupingExpr(ExprPtr expr) : expression(std::move(expr)) {}
     ValuableValue accept(ExprVisitor& v) override { return v.visitGroupingExpr(*this); }
 
-    const ExprPtr& getExpression() const { return expression; }
+    ExprPtr& getExpression() { return expression; }
 
 private:
     ExprPtr expression;
@@ -96,7 +96,7 @@ public:
     ValuableValue accept(ExprVisitor& v) override { return v.visitAssignExpr(*this); }
 
     const Token& getName()  const { return name; }
-    const ExprPtr& getValue() const { return value; }
+    ExprPtr& getValue() { return value; }
 
 private:
     Token   name;

@@ -32,7 +32,7 @@ public:
     explicit PrintStmt(ExprPtr expr) : expression(std::move(expr)) {}
     void accept(StmtVisitor& v) override { v.visitPrintStmt(*this); }
 
-    const ExprPtr& getExpression() const { return expression; }
+    ExprPtr& getExpression() { return expression; }
 
 private:
     ExprPtr expression;
@@ -44,7 +44,7 @@ public:
     explicit ExprStmt(ExprPtr expr) : expression(std::move(expr)) {}
     void accept(StmtVisitor& v) override { v.visitExprStmt(*this); }
 
-    const ExprPtr& getExpression() const { return expression; }
+    ExprPtr& getExpression() { return expression; }
 
 private:
     ExprPtr expression;
@@ -56,7 +56,7 @@ public:
     void accept(StmtVisitor& v) override { v.visitVarStmt(*this); }
 
     const Token& getName()        const { return name; }
-    const ExprPtr& getInitializer() const { return initializer; } // nullptr → nil
+    ExprPtr& getInitializer() { return initializer; } // nullptr → nil
 
 private:
     Token   name;
@@ -68,7 +68,7 @@ public:
     explicit BlockStmt(std::vector<StmtPtr> stmts) : statements(std::move(stmts)) {}
     void accept(StmtVisitor& v) override { v.visitBlockStmt(*this); }
 
-    const std::vector<StmtPtr>& getStatements() const { return statements; }
+    std::vector<StmtPtr>& getStatements() { return statements; }
 
 private:
     std::vector<StmtPtr> statements;
@@ -81,9 +81,9 @@ public:
     }
     void accept(StmtVisitor& v) override { v.visitIfStmt(*this); }
 
-    const ExprPtr& getCondition()  const { return condition; }
-    const StmtPtr& getThenBranch() const { return thenBranch; }
-    const StmtPtr& getElseBranch() const { return elseBranch; } // nullptr if no else
+    ExprPtr& getCondition()  { return condition; }
+    StmtPtr& getThenBranch() { return thenBranch; }
+    StmtPtr& getElseBranch() { return elseBranch; } // nullptr if no else
 
 private:
     ExprPtr condition;
@@ -99,10 +99,10 @@ public:
     }
     void accept(StmtVisitor& v) override { v.visitForStmt(*this); }
 
-    const StmtPtr& getInitializer() const { return initializer; } // nullptr if omitted
-    const ExprPtr& getCondition()   const { return condition; }   // nullptr → run forever
-    const ExprPtr& getIncrement()   const { return increment; }   // nullptr if omitted
-    const StmtPtr& getBody()        const { return body; }
+    StmtPtr& getInitializer() { return initializer; } // nullptr if omitted
+    ExprPtr& getCondition()   { return condition; }   // nullptr → run forever
+    ExprPtr& getIncrement()   { return increment; }   // nullptr if omitted
+    StmtPtr& getBody()        { return body; }
 
 private:
     StmtPtr initializer;

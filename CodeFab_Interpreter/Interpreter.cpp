@@ -23,6 +23,11 @@ bool Interpreter::isTruthy(const ValuableValue& v) {
     return true;
 }
 
+// 거짓 같은 값(nil 또는 false)인지 판별한다.
+bool Interpreter::isFalse(const ValuableValue& v) {
+    return !isTruthy(v);
+}
+
 bool Interpreter::isEqual(const ValuableValue& a, const ValuableValue& b) {
     if (a.index() != b.index()) return false;
     if (std::holds_alternative<std::nullptr_t>(a)) return true;
@@ -87,7 +92,7 @@ ValuableValue Interpreter::visitUnaryExpr(UnaryExpr& expr) {
         checkNumberOperand(expr.getOp(), right);
         return -std::get<double>(right);
     case TokenType::BANG:
-        return !isTruthy(right);   // 논리 부정: 거짓 같은 값이면 true
+        return isFalse(right);   // 논리 부정: 거짓 같은 값이면 true
     default:
         return nullptr;
     }
@@ -97,7 +102,7 @@ ValuableValue Interpreter::visitBinaryExpr(BinaryExpr& expr) {
     // 논리 연산자(and/or)는 단축 평가(short-circuit)를 위해 먼저 처리한다.
     if (expr.getOp().getTokenType() == TokenType::AND_OP) {
         ValuableValue left = evaluate(*expr.getLeft());
-        if (!isTruthy(left))
+        if (isFalse(left))            // 좌변이 거짓이면 우변 평가 없이 반환
             return left;
         return evaluate(*expr.getRight());
     }

@@ -21,6 +21,7 @@ private:
     void          execute(Stmt& stmt);
 
     bool        isTruthy(const ValuableValue& v);
+    bool        isFalse(const ValuableValue& v);   // nil/false 면 true (거짓 같은 값 판별)
     bool        isEqual(const ValuableValue& a, const ValuableValue& b);
     std::string stringify(const ValuableValue& v);
     void checkNumberOperand(const Token& op, const ValuableValue& operand);

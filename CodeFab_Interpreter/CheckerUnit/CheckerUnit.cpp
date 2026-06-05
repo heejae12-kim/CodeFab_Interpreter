@@ -18,7 +18,12 @@ void CheckerUnit::checkStatement(Stmt& statements_node) {
 
 void CheckerUnit::checkExpression(ExprPtr& p_expression) {
 	if (!p_expression) return;
-	p_expression->accept(*this);
+	auto result_value = p_expression->accept(*this);
+
+	if (!std::holds_alternative<std::nullptr_t>(result_value) &&
+		dynamic_cast<LiteralExpr*>(p_expression.get()) == nullptr) {
+		p_expression = std::make_unique<LiteralExpr>(std::move(result_value));
+	}
 }
 
 void CheckerUnit::checkParams(FuncStmt& stmt) {
@@ -69,26 +74,130 @@ void CheckerUnit::updateValueDistance(Expr& expr, const Token& name) {
 	}
 }
 
+std::optional<ValuableValue> CheckerUnit::evaluateBinaryCalc(
+	const Token& op, const ValuableValue& l_value, const ValuableValue& r_value)
+{
+	auto isNum  = [](const ValuableValue& v) { return std::holds_alternative<double>(v); };
+	auto isStr  = [](const ValuableValue& v) { return std::holds_alternative<std::string>(v); };
+	auto isBool = [](const ValuableValue& v) { return std::holds_alternative<bool>(v); };
+	auto num = [](const ValuableValue& v) { return std::get<double>(v); };
+	auto str = [](const ValuableValue& v) -> const std::string& { return std::get<std::string>(v); };
+
+	auto throwTypeMismatch = [&](const std::string& msg) -> std::optional<ValuableValue> {
+		throw CheckerError("[line " + std::to_string(op.getLine()) +
+			"] Checker Error: " + msg);
+		};
+
+	switch (op.getTokenType()) {
+	case TokenType::PLUS:
+		if (isNum(l_value) && isNum(r_value)) return num(l_value) + num(r_value);
+		if (isStr(l_value) && isStr(r_value)) return str(l_value) + str(r_value);
+		return throwTypeMismatch("Operands must be two numbers or two strings.");
+	case TokenType::MINUS:
+		if (!isNum(l_value) || !isNum(r_value)) return throwTypeMismatch("Operands must be numbers.");
+		return num(l_value) - num(r_value);
+	case TokenType::STAR:
+		if (!isNum(l_value) || !isNum(r_value)) return throwTypeMismatch("Operands must be numbers.");
+		return num(l_value) * num(r_value);
+	case TokenType::SLASH:
+		if (!isNum(l_value) || !isNum(r_value)) return throwTypeMismatch("Operands must be numbers.");
+		if (num(r_value) == 0.0)
+			throw CheckerError("[line " + std::to_string(op.getLine()) +
+				"] Checker Error: Division by zero.");
+		return num(l_value) / num(r_value);
+	case TokenType::LESS:
+		if (!isNum(l_value) || !isNum(r_value)) return throwTypeMismatch("Operands must be numbers.");
+		return num(l_value) < num(r_value);
+	case TokenType::LESS_EQUAL:
+		if (!isNum(l_value) || !isNum(r_value)) return throwTypeMismatch("Operands must be numbers.");
+		return num(l_value) <= num(r_value);
+	case TokenType::GREATER:
+		if (!isNum(l_value) || !isNum(r_value)) return throwTypeMismatch("Operands must be numbers.");
+		return num(l_value) > num(r_value);
+	case TokenType::GREATER_EQUAL:
+		if (!isNum(l_value) || !isNum(r_value)) return throwTypeMismatch("Operands must be numbers.");
+		return num(l_value) >= num(r_value);
+	case TokenType::EQUAL_EQUAL: {
+		if (l_value.index() != r_value.index()) return throwTypeMismatch("Operands must be the same type.");
+		if (std::holds_alternative<std::nullptr_t>(l_value)) return ValuableValue(true);
+		if (std::holds_alternative<bool>(l_value))
+			return ValuableValue(std::get<bool>(l_value) == std::get<bool>(r_value));
+		if (isNum(l_value)) return ValuableValue(num(l_value) == num(r_value));
+		if (isStr(l_value)) return ValuableValue(str(l_value) == str(r_value));
+		return {};
+	}
+	case TokenType::BANG_EQUAL: {
+		if (l_value.index() != r_value.index()) return throwTypeMismatch("Operands must be the same type.");
+		if (std::holds_alternative<std::nullptr_t>(l_value)) return ValuableValue(false);
+		if (std::holds_alternative<bool>(l_value))
+			return ValuableValue(std::get<bool>(l_value) != std::get<bool>(r_value));
+		if (isNum(l_value)) return ValuableValue(num(l_value) != num(r_value));
+		if (isStr(l_value)) return ValuableValue(str(l_value) != str(r_value));
+		return {};
+	}
+	case TokenType::AND_OP:
+		if (!isBool(l_value) || !isBool(r_value)) return throwTypeMismatch("Operands must be booleans.");
+		return ValuableValue(std::get<bool>(l_value) && std::get<bool>(r_value));
+	case TokenType::OR_OP:
+		if (!isBool(l_value) || !isBool(r_value)) return throwTypeMismatch("Operands must be booleans.");
+		return ValuableValue(std::get<bool>(l_value) || std::get<bool>(r_value));
+	default:
+		throw CheckerError("[line " + std::to_string(op.getLine()) +
+			"] Checker Error: Unknown binary operator.");
+	}
+}
+
+std::optional<ValuableValue> CheckerUnit::evaluateUnaryCalc(
+	const Token& op, const ValuableValue& v)
+{
+	if (op.getTokenType() == TokenType::MINUS) {
+		if (!std::holds_alternative<double>(v))
+			throw CheckerError("[line " + std::to_string(op.getLine()) +
+				"] Checker Error: Operand must be a number.");
+		return -std::get<double>(v);
+	}
+	if (op.getTokenType() == TokenType::BANG) {
+		if (std::holds_alternative<std::nullptr_t>(v)) return ValuableValue(true);
+		if (std::holds_alternative<bool>(v)) return ValuableValue(!std::get<bool>(v));
+		throw CheckerError("[line " + std::to_string(op.getLine()) +
+			"] Checker Error: Operand must be a boolean or nullptr.");
+	}
+	throw CheckerError("[line " + std::to_string(op.getLine()) +
+		"] Checker Error: Unknown unary operator.");
+}
+
 #pragma region ExprVisitor
 
 ValuableValue CheckerUnit::visitLiteralExpr(LiteralExpr& expr) {
-	return nullptr;
+	return expr.getValue();
 }
 
 ValuableValue CheckerUnit::visitUnaryExpr(UnaryExpr& expr) {
 	checkExpression(expr.getRight());
+	auto* r = dynamic_cast<LiteralExpr*>(expr.getRight().get());
+	if (r) {
+		if (auto result = evaluateUnaryCalc(expr.getOp(), r->getValue()))
+			return *result;
+	}
 	return nullptr;
 }
 
 ValuableValue CheckerUnit::visitBinaryExpr(BinaryExpr& expr) {
 	checkExpression(expr.getLeft());
 	checkExpression(expr.getRight());
+	auto* l_value = dynamic_cast<LiteralExpr*>(expr.getLeft().get());
+	auto* r_value = dynamic_cast<LiteralExpr*>(expr.getRight().get());
+	if (l_value && r_value) {
+		if (auto result = evaluateBinaryCalc(expr.getOp(), l_value->getValue(), r_value->getValue()))
+			return *result;
+	}
 	return nullptr;
 }
 
 ValuableValue CheckerUnit::visitGroupingExpr(GroupingExpr& expr) {
-	// ( expression ) 
 	checkExpression(expr.getExpression());
+	auto* lit = dynamic_cast<LiteralExpr*>(expr.getExpression().get());
+	if (lit) return lit->getValue();
 	return nullptr;
 }
 

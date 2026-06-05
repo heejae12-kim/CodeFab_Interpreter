@@ -28,6 +28,9 @@ protected:
 	ExprPtr boolLiteral(bool value) {
 		return std::make_unique<LiteralExpr>(value);
 	}
+	ExprPtr nullLiteral() {
+		return std::make_unique<LiteralExpr>(ValuableValue{ nullptr });
+	}
 	StmtPtr valueDeclaration(const std::string& name, ExprPtr init = nullptr, int line = 1) {
 		return std::make_unique<VarStmt>(makeIndentifier(name, line), std::move(init));
 	}
@@ -421,6 +424,413 @@ TEST_F(CheckerUnitFixture, IndexSetExprVariableValue) {
 			Token(TokenType::LEFT_PAREN, "[", nullptr, 1),
 			std::make_unique<VariableExpr>(makeIndentifier("x"))
 		)
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}
+
+// ========== evaluateUnaryCalc ==========
+
+TEST_F(CheckerUnitFixture, UnaryCalcNegatesNumber) {
+	// var a = -5.0;  ->  folded to -5.0
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<UnaryExpr>(Token(TokenType::MINUS, "-", nullptr, 1), numLiteral(5.0))
+	);
+	auto* raw = var_stmt.get();
+	statement_vector.push_back(std::move(var_stmt));
+
+	p_checker_unit->doChecker(statement_vector);
+
+	auto* folded = dynamic_cast<LiteralExpr*>(raw->getInitializer().get());
+	ASSERT_NE(folded, nullptr);
+	EXPECT_EQ(std::get<double>(folded->getValue()), -5.0);
+}
+
+TEST_F(CheckerUnitFixture, UnaryCalcBangOnTrue) {
+	// var a = !true;  ->  folded to false
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<UnaryExpr>(Token(TokenType::BANG, "!", nullptr, 1), boolLiteral(true))
+	);
+	auto* raw = var_stmt.get();
+	statement_vector.push_back(std::move(var_stmt));
+
+	p_checker_unit->doChecker(statement_vector);
+
+	auto* folded = dynamic_cast<LiteralExpr*>(raw->getInitializer().get());
+	ASSERT_NE(folded, nullptr);
+	EXPECT_EQ(std::get<bool>(folded->getValue()), false);
+}
+
+TEST_F(CheckerUnitFixture, UnaryCalcBangOnFalse) {
+	// var a = !false;  ->  folded to true
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<UnaryExpr>(Token(TokenType::BANG, "!", nullptr, 1), boolLiteral(false))
+	);
+	auto* raw = var_stmt.get();
+	statement_vector.push_back(std::move(var_stmt));
+
+	p_checker_unit->doChecker(statement_vector);
+
+	auto* folded = dynamic_cast<LiteralExpr*>(raw->getInitializer().get());
+	ASSERT_NE(folded, nullptr);
+	EXPECT_EQ(std::get<bool>(folded->getValue()), true);
+}
+
+TEST_F(CheckerUnitFixture, UnaryCalcBangOnNil) {
+	// var a = !nil;  ->  folded to true
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<UnaryExpr>(Token(TokenType::BANG, "!", nullptr, 1), nullLiteral())
+	);
+	auto* raw = var_stmt.get();
+	statement_vector.push_back(std::move(var_stmt));
+
+	p_checker_unit->doChecker(statement_vector);
+
+	auto* folded = dynamic_cast<LiteralExpr*>(raw->getInitializer().get());
+	ASSERT_NE(folded, nullptr);
+	EXPECT_EQ(std::get<bool>(folded->getValue()), true);
+}
+
+TEST_F(CheckerUnitFixture, UnaryCalcBangOnNonBoolThrows) {
+	// var a = !1;  ->  CheckerError
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<UnaryExpr>(Token(TokenType::BANG, "!", nullptr, 1), numLiteral(1.0))
+	);
+	statement_vector.push_back(std::move(var_stmt));
+
+	try {
+		p_checker_unit->doChecker(statement_vector);
+		FAIL() << "The CheckerError should occur.";
+	}
+	catch (const CheckerError& e) {
+		EXPECT_THAT(std::string(e.what()), HasSubstr("Operand must be a boolean or nullptr"));
+	}
+}
+
+TEST_F(CheckerUnitFixture, UnaryCalcMinusOnStringThrows) {
+	// var a = -"hello";  ->  CheckerError
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<UnaryExpr>(Token(TokenType::MINUS, "-", nullptr, 1), stringLiteral("hello"))
+	);
+	statement_vector.push_back(std::move(var_stmt));
+
+	try {
+		p_checker_unit->doChecker(statement_vector);
+		FAIL() << "The CheckerError should occur.";
+	}
+	catch (const CheckerError& e) {
+		EXPECT_THAT(std::string(e.what()), HasSubstr("Operand must be a number"));
+	}
+}
+
+// ========== evaluateBinaryCalc ==========
+
+TEST_F(CheckerUnitFixture, BinaryCalcAddsNumbers) {
+	// var a = 1 + 2;  ->  folded to 3.0
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(numLiteral(1.0), Token(TokenType::PLUS, "+", nullptr, 1), numLiteral(2.0))
+	);
+	auto* raw = var_stmt.get();
+	statement_vector.push_back(std::move(var_stmt));
+
+	p_checker_unit->doChecker(statement_vector);
+
+	auto* folded = dynamic_cast<LiteralExpr*>(raw->getInitializer().get());
+	ASSERT_NE(folded, nullptr);
+	EXPECT_EQ(std::get<double>(folded->getValue()), 3.0);
+}
+
+TEST_F(CheckerUnitFixture, BinaryCalcConcatenatesStrings) {
+	// var a = "hello" + " world";  ->  folded to "hello world"
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(stringLiteral("hello"), Token(TokenType::PLUS, "+", nullptr, 1), stringLiteral(" world"))
+	);
+	auto* raw = var_stmt.get();
+	statement_vector.push_back(std::move(var_stmt));
+
+	p_checker_unit->doChecker(statement_vector);
+
+	auto* folded = dynamic_cast<LiteralExpr*>(raw->getInitializer().get());
+	ASSERT_NE(folded, nullptr);
+	EXPECT_EQ(std::get<std::string>(folded->getValue()), "hello world");
+}
+
+TEST_F(CheckerUnitFixture, BinaryCalcSubtractsNumbers) {
+	// var a = 5 - 3;  ->  folded to 2.0
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(numLiteral(5.0), Token(TokenType::MINUS, "-", nullptr, 1), numLiteral(3.0))
+	);
+	auto* raw = var_stmt.get();
+	statement_vector.push_back(std::move(var_stmt));
+
+	p_checker_unit->doChecker(statement_vector);
+
+	auto* folded = dynamic_cast<LiteralExpr*>(raw->getInitializer().get());
+	ASSERT_NE(folded, nullptr);
+	EXPECT_EQ(std::get<double>(folded->getValue()), 2.0);
+}
+
+TEST_F(CheckerUnitFixture, BinaryCalcMultipliesNumbers) {
+	// var a = 3 * 4;  ->  folded to 12.0
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(numLiteral(3.0), Token(TokenType::STAR, "*", nullptr, 1), numLiteral(4.0))
+	);
+	auto* raw = var_stmt.get();
+	statement_vector.push_back(std::move(var_stmt));
+
+	p_checker_unit->doChecker(statement_vector);
+
+	auto* folded = dynamic_cast<LiteralExpr*>(raw->getInitializer().get());
+	ASSERT_NE(folded, nullptr);
+	EXPECT_EQ(std::get<double>(folded->getValue()), 12.0);
+}
+
+TEST_F(CheckerUnitFixture, BinaryCalcDividesNumbers) {
+	// var a = 10 / 2;  ->  folded to 5.0
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(numLiteral(10.0), Token(TokenType::SLASH, "/", nullptr, 1), numLiteral(2.0))
+	);
+	auto* raw = var_stmt.get();
+	statement_vector.push_back(std::move(var_stmt));
+
+	p_checker_unit->doChecker(statement_vector);
+
+	auto* folded = dynamic_cast<LiteralExpr*>(raw->getInitializer().get());
+	ASSERT_NE(folded, nullptr);
+	EXPECT_EQ(std::get<double>(folded->getValue()), 5.0);
+}
+
+TEST_F(CheckerUnitFixture, BinaryCalcLessComparison) {
+	// var a = 1 < 2;  ->  folded to true
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(numLiteral(1.0), Token(TokenType::LESS, "<", nullptr, 1), numLiteral(2.0))
+	);
+	auto* raw = var_stmt.get();
+	statement_vector.push_back(std::move(var_stmt));
+
+	p_checker_unit->doChecker(statement_vector);
+
+	auto* folded = dynamic_cast<LiteralExpr*>(raw->getInitializer().get());
+	ASSERT_NE(folded, nullptr);
+	EXPECT_EQ(std::get<bool>(folded->getValue()), true);
+}
+
+TEST_F(CheckerUnitFixture, BinaryCalcEqualEqualNumbers) {
+	// var a = 1 == 1;  ->  folded to true
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(numLiteral(1.0), Token(TokenType::EQUAL_EQUAL, "==", nullptr, 1), numLiteral(1.0))
+	);
+	auto* raw = var_stmt.get();
+	statement_vector.push_back(std::move(var_stmt));
+
+	p_checker_unit->doChecker(statement_vector);
+
+	auto* folded = dynamic_cast<LiteralExpr*>(raw->getInitializer().get());
+	ASSERT_NE(folded, nullptr);
+	EXPECT_EQ(std::get<bool>(folded->getValue()), true);
+}
+
+TEST_F(CheckerUnitFixture, BinaryCalcBangEqualNumbers) {
+	// var a = 1 != 2;  ->  folded to true
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(numLiteral(1.0), Token(TokenType::BANG_EQUAL, "!=", nullptr, 1), numLiteral(2.0))
+	);
+	auto* raw = var_stmt.get();
+	statement_vector.push_back(std::move(var_stmt));
+
+	p_checker_unit->doChecker(statement_vector);
+
+	auto* folded = dynamic_cast<LiteralExpr*>(raw->getInitializer().get());
+	ASSERT_NE(folded, nullptr);
+	EXPECT_EQ(std::get<bool>(folded->getValue()), true);
+}
+
+TEST_F(CheckerUnitFixture, BinaryCalcAndOp) {
+	// var a = true && false;  ->  folded to false
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(boolLiteral(true), Token(TokenType::AND_OP, "&&", nullptr, 1), boolLiteral(false))
+	);
+	auto* raw = var_stmt.get();
+	statement_vector.push_back(std::move(var_stmt));
+
+	p_checker_unit->doChecker(statement_vector);
+
+	auto* folded = dynamic_cast<LiteralExpr*>(raw->getInitializer().get());
+	ASSERT_NE(folded, nullptr);
+	EXPECT_EQ(std::get<bool>(folded->getValue()), false);
+}
+
+TEST_F(CheckerUnitFixture, BinaryCalcOrOp) {
+	// var a = false || true;  ->  folded to true
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(boolLiteral(false), Token(TokenType::OR_OP, "||", nullptr, 1), boolLiteral(true))
+	);
+	auto* raw = var_stmt.get();
+	statement_vector.push_back(std::move(var_stmt));
+
+	p_checker_unit->doChecker(statement_vector);
+
+	auto* folded = dynamic_cast<LiteralExpr*>(raw->getInitializer().get());
+	ASSERT_NE(folded, nullptr);
+	EXPECT_EQ(std::get<bool>(folded->getValue()), true);
+}
+
+TEST_F(CheckerUnitFixture, BinaryCalcDivisionByZeroThrows) {
+	// var a = 1 / 0;  ->  CheckerError
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(numLiteral(1.0), Token(TokenType::SLASH, "/", nullptr, 1), numLiteral(0.0))
+	);
+	statement_vector.push_back(std::move(var_stmt));
+
+	try {
+		p_checker_unit->doChecker(statement_vector);
+		FAIL() << "The CheckerError should occur.";
+	}
+	catch (const CheckerError& e) {
+		EXPECT_THAT(std::string(e.what()), HasSubstr("Division by zero"));
+	}
+}
+
+TEST_F(CheckerUnitFixture, BinaryCalcTypeMismatchThrows) {
+	// var a = 1 + "a";  ->  CheckerError
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(numLiteral(1.0), Token(TokenType::PLUS, "+", nullptr, 1), stringLiteral("a"))
+	);
+	statement_vector.push_back(std::move(var_stmt));
+
+	try {
+		p_checker_unit->doChecker(statement_vector);
+		FAIL() << "The CheckerError should occur.";
+	}
+	catch (const CheckerError& e) {
+		EXPECT_THAT(std::string(e.what()), HasSubstr("Operands must be two numbers or two strings"));
+	}
+}
+
+TEST_F(CheckerUnitFixture, BinaryCalcEqualEqualTypeMismatchThrows) {
+	// var a = 1 == "a";  ->  CheckerError
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(numLiteral(1.0), Token(TokenType::EQUAL_EQUAL, "==", nullptr, 1), stringLiteral("a"))
+	);
+	statement_vector.push_back(std::move(var_stmt));
+
+	try {
+		p_checker_unit->doChecker(statement_vector);
+		FAIL() << "The CheckerError should occur.";
+	}
+	catch (const CheckerError& e) {
+		EXPECT_THAT(std::string(e.what()), HasSubstr("Operands must be the same type"));
+	}
+}
+
+TEST_F(CheckerUnitFixture, BinaryCalcBangEqualTypeMismatchThrows) {
+	// var a = 1 != "a";  ->  CheckerError
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(numLiteral(1.0), Token(TokenType::BANG_EQUAL, "!=", nullptr, 1), stringLiteral("a"))
+	);
+	statement_vector.push_back(std::move(var_stmt));
+
+	try {
+		p_checker_unit->doChecker(statement_vector);
+		FAIL() << "The CheckerError should occur.";
+	}
+	catch (const CheckerError& e) {
+		EXPECT_THAT(std::string(e.what()), HasSubstr("Operands must be the same type"));
+	}
+}
+
+TEST_F(CheckerUnitFixture, BinaryCalcAndOpNonBoolThrows) {
+	// var a = 1 && true;  ->  CheckerError
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(numLiteral(1.0), Token(TokenType::AND_OP, "&&", nullptr, 1), boolLiteral(true))
+	);
+	statement_vector.push_back(std::move(var_stmt));
+
+	try {
+		p_checker_unit->doChecker(statement_vector);
+		FAIL() << "The CheckerError should occur.";
+	}
+	catch (const CheckerError& e) {
+		EXPECT_THAT(std::string(e.what()), HasSubstr("Operands must be booleans"));
+	}
+}
+
+TEST_F(CheckerUnitFixture, BinaryCalcOrOpNonBoolThrows) {
+	// var a = "hello" || false;  ->  CheckerError
+	auto var_stmt = std::make_unique<VarStmt>(
+		makeIndentifier("a"),
+		std::make_unique<BinaryExpr>(stringLiteral("hello"), Token(TokenType::OR_OP, "||", nullptr, 1), boolLiteral(false))
+	);
+	statement_vector.push_back(std::move(var_stmt));
+
+	try {
+		p_checker_unit->doChecker(statement_vector);
+		FAIL() << "The CheckerError should occur.";
+	}
+	catch (const CheckerError& e) {
+		EXPECT_THAT(std::string(e.what()), HasSubstr("Operands must be booleans"));
+	}
+}
+
+TEST_F(CheckerUnitFixture, ComplexExpressionWithPrecedence) {
+	// var a = 1;
+	// a = a + (1 - 2 * 3 * 4 * 5 / 6 + 7 + 8 + 9) * 10;
+	statement_vector.push_back(valueDeclaration("a", numLiteral(1.0)));
+
+	// 2 * 3 * 4 * 5 / 6
+	auto mul_2_3 = std::make_unique<BinaryExpr>(
+		numLiteral(2.0), Token(TokenType::STAR,  "*", nullptr, 2), numLiteral(3.0));
+	auto mul_x_4 = std::make_unique<BinaryExpr>(
+		std::move(mul_2_3), Token(TokenType::STAR,  "*", nullptr, 2), numLiteral(4.0));
+	auto mul_x_5 = std::make_unique<BinaryExpr>(
+		std::move(mul_x_4), Token(TokenType::STAR,  "*", nullptr, 2), numLiteral(5.0));
+	auto div_x_6 = std::make_unique<BinaryExpr>(
+		std::move(mul_x_5), Token(TokenType::SLASH, "/", nullptr, 2), numLiteral(6.0));
+
+	// 1 - (2*3*4*5/6) + 7 + 8 + 9
+	auto sub_1 = std::make_unique<BinaryExpr>(
+		numLiteral(1.0), Token(TokenType::MINUS, "-", nullptr, 2), std::move(div_x_6));
+	auto add_7 = std::make_unique<BinaryExpr>(
+		std::move(sub_1), Token(TokenType::PLUS, "+", nullptr, 2), numLiteral(7.0));
+	auto add_8 = std::make_unique<BinaryExpr>(
+		std::move(add_7), Token(TokenType::PLUS, "+", nullptr, 2), numLiteral(8.0));
+	auto add_9 = std::make_unique<BinaryExpr>(
+		std::move(add_8), Token(TokenType::PLUS, "+", nullptr, 2), numLiteral(9.0));
+
+	// (inner) * 10
+	auto group   = std::make_unique<GroupingExpr>(std::move(add_9));
+	auto mul_10  = std::make_unique<BinaryExpr>(
+		std::move(group), Token(TokenType::STAR, "*", nullptr, 2), numLiteral(10.0));
+
+	// a + (inner) * 10
+	auto add_a = std::make_unique<BinaryExpr>(
+		std::make_unique<VariableExpr>(makeIndentifier("a", 2)),
+		Token(TokenType::PLUS, "+", nullptr, 2),
+		std::move(mul_10));
+
+	statement_vector.push_back(std::make_unique<ExprStmt>(
+		std::make_unique<AssignExpr>(makeIndentifier("a", 2), std::move(add_a))
 	));
 
 	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));

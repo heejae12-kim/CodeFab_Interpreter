@@ -21,7 +21,7 @@ public:
 private:
 	void checkBlock(const std::vector<StmtPtr>& statements_tree_vector);
 	void checkStatement(Stmt& statements_node);
-	void checkExpression(Expr& expression_node);
+	void checkExpression(ExprPtr& p_expression);
 	void addBeginBlockScope();
 	void addEndBlockScope();
 	void declareValue(const Token& name);
@@ -37,7 +37,7 @@ private:
 	ValuableValue visitGroupingExpr(GroupingExpr& expr) override;
 	ValuableValue visitVariableExpr(VariableExpr& expr) override;
 	ValuableValue visitAssignExpr(AssignExpr& expr) override;
-	ValuableValue visitCallExpr(CallExpr& expr) override { return {}; };
+	ValuableValue visitCallExpr(CallExpr& expr) override;
 	ValuableValue visitIndexGetExpr(ArrIndexGetExpr& expr) override { return {}; };
 	ValuableValue visitIndexSetExpr(ArrIndexSetExpr& expr) override { return {}; };
 

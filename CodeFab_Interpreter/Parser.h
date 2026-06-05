@@ -41,11 +41,11 @@ private:
 	ExprPtr finishCall(ExprPtr callee);
 	ExprPtr primary();
 
-	bool match(std::initializer_list<TokenType> types);
-	bool check(TokenType type);
-	Token& advance();
-	Token& peek();
-	bool isAtEnd();
-	Token& previous();
-	Token consume(TokenType type, const std::string& msg);
+	bool         match(std::initializer_list<TokenType> types);
+	bool         check(TokenType type) const;
+	bool         isAtEnd() const;
+	const Token& peek() const;
+	Token&       advance();
+	Token&       previous();
+	Token        consume(TokenType type, const std::string& msg);
 };

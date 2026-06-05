@@ -245,11 +245,11 @@ ExprPtr Parser::primary() {
 	throw ParseError("[line " + std::to_string(peek().getLine()) + "] Syntax Error at '" + peek().getLexme() + "': Expected expression.");
 }
 
-bool Parser::check(TokenType t)  {
+bool Parser::check(TokenType t) const {
 	return tokens_[current].getTokenType() == t;
 }
 
-bool Parser::isAtEnd()  {
+bool Parser::isAtEnd() const {
 	return tokens_[current].getTokenType() == TokenType::EOF_TOKEN;
 }
 
@@ -258,8 +258,8 @@ Token& Parser::advance() {
 	return tokens_[current - 1];
 }
 
-Token& Parser::peek() { 
-	return tokens_[current]; 
+const Token& Parser::peek() const {
+	return tokens_[current];
 }
 
 Token& Parser::previous() {

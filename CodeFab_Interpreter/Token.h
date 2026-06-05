@@ -8,6 +8,7 @@ enum class TokenType {
     LEFT_BRACE, RIGHT_BRACE,
     SEMICOLON,
     PLUS, MINUS, STAR, SLASH,
+    COMMA,
 
     // One or two char tokens
     LESS, LESS_EQUAL,
@@ -21,6 +22,7 @@ enum class TokenType {
     // Keywords
     VAR, IF, ELSE, FOR, PRINT,
     TRUE_KW, FALSE_KW,
+    FUNC, RETURN,
 
     // Boolean Operator
     AND_OP, OR_OP, BANG,

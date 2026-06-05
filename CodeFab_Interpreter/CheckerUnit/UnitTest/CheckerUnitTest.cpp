@@ -369,3 +369,59 @@ TEST_F(CheckerUnitFixture, ReturnWithoutValue) {
 
 	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
 }
+
+TEST_F(CheckerUnitFixture, IndexGetExprLiteralIndex) {
+	// arr[0];
+	statement_vector.push_back(std::make_unique<ExprStmt>(
+		std::make_unique<ArrIndexGetExpr>(
+			std::make_unique<VariableExpr>(makeIndentifier("arr")),
+			numLiteral(0.0),
+			Token(TokenType::LEFT_PAREN, "[", nullptr, 1)
+		)
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}
+
+TEST_F(CheckerUnitFixture, IndexGetExprVariableIndex) {
+	// var i = 1; arr[i];
+	statement_vector.push_back(valueDeclaration("i", numLiteral(1.0)));
+	statement_vector.push_back(std::make_unique<ExprStmt>(
+		std::make_unique<ArrIndexGetExpr>(
+			std::make_unique<VariableExpr>(makeIndentifier("arr")),
+			std::make_unique<VariableExpr>(makeIndentifier("i")),
+			Token(TokenType::LEFT_PAREN, "[", nullptr, 1)
+		)
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}
+
+TEST_F(CheckerUnitFixture, IndexSetExprLiteralValue) {
+	// arr[0] = 1;
+	statement_vector.push_back(std::make_unique<ExprStmt>(
+		std::make_unique<ArrIndexSetExpr>(
+			std::make_unique<VariableExpr>(makeIndentifier("arr")),
+			numLiteral(0.0),
+			Token(TokenType::LEFT_PAREN, "[", nullptr, 1),
+			numLiteral(1.0)
+		)
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}
+
+TEST_F(CheckerUnitFixture, IndexSetExprVariableValue) {
+	// var x = 1; arr[0] = x;
+	statement_vector.push_back(valueDeclaration("x", numLiteral(1.0)));
+	statement_vector.push_back(std::make_unique<ExprStmt>(
+		std::make_unique<ArrIndexSetExpr>(
+			std::make_unique<VariableExpr>(makeIndentifier("arr")),
+			numLiteral(0.0),
+			Token(TokenType::LEFT_PAREN, "[", nullptr, 1),
+			std::make_unique<VariableExpr>(makeIndentifier("x"))
+		)
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}

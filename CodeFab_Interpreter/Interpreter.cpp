@@ -82,14 +82,32 @@ ValuableValue Interpreter::visitGroupingExpr(GroupingExpr& expr) {
 
 ValuableValue Interpreter::visitUnaryExpr(UnaryExpr& expr) {
     ValuableValue right = evaluate(*expr.getRight());
-    if (expr.getOp().getTokenType() == TokenType::MINUS) {
+    switch (expr.getOp().getTokenType()) {
+    case TokenType::MINUS:
         checkNumberOperand(expr.getOp(), right);
         return -std::get<double>(right);
+    case TokenType::BANG:
+        return !isTruthy(right);   // 논리 부정: 거짓 같은 값이면 true
+    default:
+        return nullptr;
     }
-    return nullptr;
 }
 
 ValuableValue Interpreter::visitBinaryExpr(BinaryExpr& expr) {
+    // 논리 연산자(and/or)는 단축 평가(short-circuit)를 위해 먼저 처리한다.
+    if (expr.getOp().getTokenType() == TokenType::AND_OP) {
+        ValuableValue left = evaluate(*expr.getLeft());
+        if (!isTruthy(left))
+            return left;
+        return evaluate(*expr.getRight());
+    }
+    if (expr.getOp().getTokenType() == TokenType::OR_OP) {
+        ValuableValue left = evaluate(*expr.getLeft());
+        if (isTruthy(left))
+            return left;
+        return evaluate(*expr.getRight());
+    }
+
     ValuableValue left  = evaluate(*expr.getLeft());
     ValuableValue right = evaluate(*expr.getRight());
 

@@ -132,58 +132,27 @@ ExprPtr Parser::assignment() {
 	return expr;
 }
 
-ExprPtr Parser::logicalOr() {
-	ExprPtr expr = logicalAnd();
-	while (match({ TokenType::OR_OP })) {
-		Token op = previous();
-		ExprPtr rhs = logicalAnd();
+ExprPtr Parser::parseBinary(std::function<ExprPtr()> next, std::vector<TokenType> ops) {
+	ExprPtr expr = next();
+	while (match(ops)) {
+		Token   op  = previous();
+		ExprPtr rhs = next();
 		expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(rhs));
 	}
 	return expr;
 }
 
-ExprPtr Parser::logicalAnd() {
-	ExprPtr expr = comparison();
-	while (match({ TokenType::AND_OP })) {
-		Token op = previous();
-		ExprPtr rhs = comparison();
-		expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(rhs));
-	}
-	return expr;
-}
+ExprPtr Parser::logicalOr()      { return parseBinary([this] { return logicalAnd(); },     { TokenType::OR_OP }); }
+ExprPtr Parser::logicalAnd()     { return parseBinary([this] { return comparison(); },     { TokenType::AND_OP }); }
+ExprPtr Parser::addition()       { return parseBinary([this] { return multiplication(); }, { TokenType::PLUS, TokenType::MINUS }); }
+ExprPtr Parser::multiplication() { return parseBinary([this] { return unary(); },          { TokenType::STAR, TokenType::SLASH }); }
 
 ExprPtr Parser::comparison() {
-	ExprPtr expr = addition();
-	while (match({ TokenType::LESS, TokenType::LESS_EQUAL,
-				   TokenType::GREATER, TokenType::GREATER_EQUAL,
-				   TokenType::EQUAL_EQUAL, TokenType::BANG_EQUAL })) {
-		Token op = previous();
-		ExprPtr rhs = addition();
-		expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(rhs));
-	}
-	return expr;
-}
-
-ExprPtr Parser::addition() {
-	ExprPtr expr = multiplication();
-	while (match({ TokenType::PLUS, TokenType::MINUS }))
-	{
-		Token op = previous();
-		ExprPtr rhs = multiplication();
-		expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(rhs));
-	}
-	return expr;
-}
-
-ExprPtr Parser::multiplication() {
-	ExprPtr expr = unary();
-	while (match({ TokenType::STAR, TokenType::SLASH }))
-	{
-		Token op = previous();
-		ExprPtr rhs = unary();
-		expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(rhs));
-	}
-	return expr;
+	return parseBinary([this] { return addition(); }, {
+		TokenType::LESS,         TokenType::LESS_EQUAL,
+		TokenType::GREATER,      TokenType::GREATER_EQUAL,
+		TokenType::EQUAL_EQUAL,  TokenType::BANG_EQUAL
+	});
 }
 
 ExprPtr Parser::unary() {
@@ -266,13 +235,9 @@ Token& Parser::previous() {
 	return tokens_[current -1];
 }
 
-bool Parser::match(std::initializer_list<TokenType>
-	types) {
+bool Parser::match(std::vector<TokenType> types) {
 	for (auto t : types) {
-		if (check(t)) {
-			advance();
-			return true;
-		}
+		if (check(t)) { advance(); return true; }
 	}
 	return false;
 }

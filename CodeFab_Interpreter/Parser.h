@@ -1,6 +1,7 @@
 #pragma once
-#include "Stmt.h"
 #include <vector>
+#include "Stmt.h"
+#include <functional>
 #include <initializer_list>
 #include <stdexcept>
 
@@ -29,6 +30,8 @@ private:
 	StmtPtr blockStatement();
 	StmtPtr returnStatement();
 
+	ExprPtr parseBinary(std::function<ExprPtr()> next, std::vector<TokenType> ops);
+
 	ExprPtr expression();
 	ExprPtr assignment();
 	ExprPtr logicalOr();
@@ -41,7 +44,7 @@ private:
 	ExprPtr finishCall(ExprPtr callee);
 	ExprPtr primary();
 
-	bool         match(std::initializer_list<TokenType> types);
+	bool         match(std::vector<TokenType> types);
 	bool         check(TokenType type) const;
 	bool         isAtEnd() const;
 	const Token& peek() const;

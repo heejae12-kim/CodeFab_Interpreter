@@ -37,9 +37,12 @@ enum class TokenType {
 // 배열 값 타입 — ValuableValue의 재귀 구조를 위해 forward declaration 사용
 class ArrayValue;
 using ArrayPtr = std::shared_ptr<ArrayValue>;
+// [A안] 호출 가능한 값(함수 등) — 정의는 Callable.h, 여기서는 전방선언만 둔다.
+class Callable;
+using CallablePtr = std::shared_ptr<Callable>;
 
-// Runtime value type: number, string, bool, nil, array
-using ValuableValue = std::variant<double, std::string, bool, std::nullptr_t, ArrayPtr>;
+// Runtime value type: number, string, bool, nil, array, callable
+using ValuableValue = std::variant<double, std::string, bool, std::nullptr_t, ArrayPtr, CallablePtr>;
 
 class ArrayValue {
 public:

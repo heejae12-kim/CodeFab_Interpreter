@@ -147,7 +147,7 @@ ExprPtr Parser::multiplication() {
 }
 
 ExprPtr Parser::unary() {
-    if (match({ TokenType::MINUS })) {
+    if (match({ TokenType::MINUS, TokenType::BANG })) {
         Token op = previous();
         ExprPtr rhs = unary();
         return std::make_unique<UnaryExpr>(std::move(op), std::move(rhs));

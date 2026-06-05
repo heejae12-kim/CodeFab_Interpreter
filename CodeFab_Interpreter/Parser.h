@@ -29,7 +29,10 @@ private:
 	StmtPtr blockStatement();
 	StmtPtr returnStatement();
 
-	ExprPtr parseBinary(std::function<ExprPtr()> next, std::vector<TokenType> ops);
+	ExprPtr              parseBinary(std::function<ExprPtr()> next, std::vector<TokenType> ops);
+	std::vector<StmtPtr> parseBlock(const std::string& closingMsg = "Expected '}' after block.");
+	std::string          makeError(const std::string& msg) const;
+
 	ExprPtr expression();
 	ExprPtr assignment();
 	ExprPtr logicalOr();

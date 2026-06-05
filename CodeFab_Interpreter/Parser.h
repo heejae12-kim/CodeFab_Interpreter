@@ -32,6 +32,7 @@ private:
 	ExprPtr comparison();
 	ExprPtr addition();
 	ExprPtr multiplication();
+	ExprPtr unary();
 	ExprPtr primary();
 
 	bool match(std::initializer_list<TokenType> types);

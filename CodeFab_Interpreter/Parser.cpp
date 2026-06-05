@@ -116,14 +116,23 @@ ExprPtr Parser::addition() {
 }
 
 ExprPtr Parser::multiplication() {
-    ExprPtr expr = primary();
+    ExprPtr expr = unary();
     while (match({ TokenType::STAR, TokenType::SLASH }))
     {
         Token op = previous();
-        ExprPtr rhs = primary();
+        ExprPtr rhs = unary();
         expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(rhs));
     }
     return expr;
+}
+
+ExprPtr Parser::unary() {
+    if (match({ TokenType::MINUS })) {
+        Token op = previous();
+        ExprPtr rhs = unary();
+        return std::make_unique<UnaryExpr>(std::move(op), std::move(rhs));
+    }
+    return primary();
 }
 
 ExprPtr Parser::primary() {

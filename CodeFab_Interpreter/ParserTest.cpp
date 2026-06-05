@@ -659,6 +659,40 @@ TEST(ParserTest, BoolEqualityAndPrint) {
     }
 }
 
+TEST(ParserTest, UnaryMinus) {
+    std::vector<Token> tokens = {
+        // var a = -3;
+        Token(TokenType::VAR,        "var", nullptr, 1),
+        Token(TokenType::IDENTIFIER, "a",   nullptr, 1),
+        Token(TokenType::EQUAL,      "=",   nullptr, 1),
+        Token(TokenType::MINUS,      "-",   nullptr, 1),
+        Token(TokenType::NUMBER,     "3",   3.0,     1),
+        Token(TokenType::SEMICOLON,  ";",   nullptr, 1),
+        Token(TokenType::EOF_TOKEN,  "",    nullptr, 1),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 1u);
+
+    MockStmtVisitor mock;
+    EXPECT_CALL(mock, visitVarStmt(testing::_))
+        .WillOnce([](VarStmt& stmt) {
+        EXPECT_EQ(stmt.getName().getLexme(), "a");
+
+        auto* unary = dynamic_cast<UnaryExpr*>(stmt.getInitializer().get());
+        ASSERT_NE(unary, nullptr);
+        EXPECT_EQ(unary->getOp().getTokenType(), TokenType::MINUS);
+
+        auto* lit = dynamic_cast<LiteralExpr*>(unary->getRight().get());
+        ASSERT_NE(lit, nullptr);
+        EXPECT_DOUBLE_EQ(std::get<double>(lit->getValue()), 3.0);
+        });
+
+    stmts[0]->accept(mock);
+}
+
 TEST(ParserTest, GroupingExpr) {
     std::vector<Token> tokens = {
         // print (1 + 2) * 3;

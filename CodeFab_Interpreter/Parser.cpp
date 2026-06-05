@@ -70,14 +70,20 @@ StmtPtr Parser::ifStatement() {
 
 StmtPtr Parser::forStatement() {
     consume(TokenType::LEFT_PAREN, "Expected '(' after 'for'.");
-    StmtPtr p_init;
-    if (match({ TokenType::VAR })) p_init = varDeclaration();
-    else p_init = expressionStatement();
 
-    ExprPtr cond = comparison();
+    StmtPtr p_init;
+    if      (match({ TokenType::VAR }))    p_init = varDeclaration();
+    else if (!check(TokenType::SEMICOLON)) p_init = expressionStatement();
+    else                                   consume(TokenType::SEMICOLON, "");
+
+    ExprPtr cond;
+    if (!check(TokenType::SEMICOLON)) cond = comparison();
     consume(TokenType::SEMICOLON, "Expected ';' after for condition.");
-    ExprPtr incr = assignment();
+
+    ExprPtr incr;
+    if (!check(TokenType::RIGHT_PAREN)) incr = assignment();
     consume(TokenType::RIGHT_PAREN, "Expected ')' after for clauses.");
+
     StmtPtr body = statement();
     return std::make_unique<ForStmt>(std::move(p_init), std::move(cond), std::move(incr), std::move(body));
 }

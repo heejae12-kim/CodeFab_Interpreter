@@ -25,6 +25,9 @@ protected:
 	ExprPtr stringLiteral(string str) {
 		return std::make_unique<LiteralExpr>(str);
 	}
+	ExprPtr boolLiteral(bool value) {
+		return std::make_unique<LiteralExpr>(value);
+	}
 	StmtPtr valueDeclaration(const std::string& name, ExprPtr init = nullptr, int line = 1) {
 		return std::make_unique<VarStmt>(makeIndentifier(name, line), std::move(init));
 	}
@@ -202,6 +205,44 @@ TEST_F(CheckerUnitFixture, ForStmtFullLoop) {
 			)
 		),
 		makeBlockStatement(std::move(body))
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}
+
+TEST_F(CheckerUnitFixture, UnaryExpressionBang) {
+	// print !true;
+	statement_vector.push_back(std::make_unique<PrintStmt>(
+		std::make_unique<UnaryExpr>(
+			Token(TokenType::BANG, "!", nullptr, 1),
+			boolLiteral(true)
+		)
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}
+
+TEST_F(CheckerUnitFixture, BinaryExpressionAndOp) {
+	// print true and false;
+	statement_vector.push_back(std::make_unique<PrintStmt>(
+		std::make_unique<BinaryExpr>(
+			boolLiteral(true),
+			Token(TokenType::AND_OP, "and", nullptr, 1),
+			boolLiteral(false)
+		)
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}
+
+TEST_F(CheckerUnitFixture, BinaryExpressionOrOp) {
+	// print true or false;
+	statement_vector.push_back(std::make_unique<PrintStmt>(
+		std::make_unique<BinaryExpr>(
+			boolLiteral(true),
+			Token(TokenType::OR_OP, "or", nullptr, 1),
+			boolLiteral(false)
+		)
 	));
 
 	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));

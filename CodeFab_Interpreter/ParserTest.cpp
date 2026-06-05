@@ -9,6 +9,8 @@ public:
     MOCK_METHOD(void, visitBlockStmt, (BlockStmt&), (override));
     MOCK_METHOD(void, visitIfStmt, (IfStmt&), (override));
     MOCK_METHOD(void, visitForStmt, (ForStmt&), (override));
+    MOCK_METHOD(void, visitFuncStmt, (FuncStmt&), (override));
+    MOCK_METHOD(void, visitReturnStmt, (ReturnStmt&), (override));
 };
 
 TEST(ParserTest, VarDeclaration) {

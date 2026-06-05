@@ -44,6 +44,8 @@ private:
 	void visitBlockStmt(BlockStmt& stmt) override;
 	void visitIfStmt(IfStmt& stmt) override;
 	void visitForStmt(ForStmt& stmt) override;
+	void visitFuncStmt(FuncStmt& stmt) override {};
+	void visitReturnStmt(ReturnStmt& stmt) override {};
 
 #pragma endregion
 

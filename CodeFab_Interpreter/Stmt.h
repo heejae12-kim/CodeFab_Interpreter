@@ -9,6 +9,8 @@ class VarStmt;
 class BlockStmt;
 class IfStmt;
 class ForStmt;
+class FuncStmt;
+class ReturnStmt;
 
 interface StmtVisitor{
     virtual void visitPrintStmt(PrintStmt & stmt) = 0;
@@ -17,6 +19,8 @@ interface StmtVisitor{
     virtual void visitBlockStmt(BlockStmt& stmt) = 0;
     virtual void visitIfStmt(IfStmt& stmt) = 0;
     virtual void visitForStmt(ForStmt& stmt) = 0;
+    virtual void visitFuncStmt(FuncStmt& stmt) = 0;
+    virtual void visitReturnStmt(ReturnStmt& stmt) = 0;
     virtual ~StmtVisitor() = default;
 };
 
@@ -109,4 +113,34 @@ private:
     ExprPtr condition;
     ExprPtr increment;
     StmtPtr body;
+};
+
+// Func name(p1, p2, ...) { body }
+class FuncStmt : public Stmt {
+public:
+    FuncStmt(Token name, std::vector<Token> params, std::vector<StmtPtr> body)
+        : name(std::move(name)), params(std::move(params)), body(std::move(body)) {
+    }
+    void                        accept(StmtVisitor& v) override { v.visitFuncStmt(*this); }
+    const Token& getName()   const { return name; }
+    const std::vector<Token>& getParams() const { return params; }
+    std::vector<StmtPtr>& getBody() { return body; }
+private:
+    Token                name;
+    std::vector<Token>   params;
+    std::vector<StmtPtr> body;
+};
+
+// return expr;
+class ReturnStmt : public Stmt {
+public:
+    ReturnStmt(Token keyword, ExprPtr value)
+        : keyword(std::move(keyword)), value(std::move(value)) {
+    }
+    void         accept(StmtVisitor& v) override { v.visitReturnStmt(*this); }
+    const Token& getKeyword() const { return keyword; }
+    ExprPtr& getValue() { return value; }
+private:
+    Token   keyword;
+    ExprPtr value;
 };

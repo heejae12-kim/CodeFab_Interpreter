@@ -212,17 +212,12 @@ ExprPtr Parser::primary() {
         consume(TokenType::RIGHT_PAREN, "Expected ')' after expression.");
         return std::make_unique<GroupingExpr>(std::move(p_expr));
     }
-    throw ParseError(makeError("Expected expression."));
-}
-
-std::string Parser::makeError(const std::string& msg) const {
-    return "[line " + std::to_string(peek().getLine())
-        + "] Syntax Error at '" + peek().getLexme() + "': " + msg;
+    throw ParseError("[line " + std::to_string(peek().getLine()) + "] Syntax Error at '" + peek().getLexme() + "': Expected expression.");
 }
 
 Token Parser::consume(TokenType type, const std::string& msg) {
     if (check(type)) return advance();
-    throw ParseError(makeError(msg));
+    throw ParseError("[line " + std::to_string(peek().getLine()) + "] Syntax Error at '" + peek().getLexme() + "': " + msg);
 }
 
 bool Parser::match(std::vector<TokenType> types) {

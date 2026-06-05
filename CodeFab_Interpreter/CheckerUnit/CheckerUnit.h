@@ -5,6 +5,8 @@
 #include "./CheckerError.h"
 #include "../Stmt.h"
 
+#define USE_DISTANCE_OPTIMIZE
+
 using std::vector;
 using std::string;
 using std::unordered_map;
@@ -24,6 +26,8 @@ private:
 	void addEndBlockScope();
 	void declareValue(const Token& name);
 	void defineValue(const Token& name);
+
+	void updateValueDistance(Expr& expr, const Token& name);
 
 #pragma region ExprVisitor
 

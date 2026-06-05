@@ -2,7 +2,6 @@
 #include <vector>
 #include "Stmt.h"
 #include <functional>
-#include <initializer_list>
 #include <stdexcept>
 
 class ParseError : public std::runtime_error {

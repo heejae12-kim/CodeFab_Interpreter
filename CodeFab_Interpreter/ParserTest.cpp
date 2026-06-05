@@ -1264,6 +1264,272 @@ TEST(ParserTest, ArrayIndexAssignment) {
     }
 }
 
+TEST(ParserTest, FuncWithArrayParam) {
+    std::vector<Token> tokens = {
+        // Func getFirst(arr) { return arr[0]; }
+        Token(TokenType::FUNC,         "Func",     nullptr, 1),
+        Token(TokenType::IDENTIFIER,   "getFirst", nullptr, 1),
+        Token(TokenType::LEFT_PAREN,   "(",        nullptr, 1),
+        Token(TokenType::IDENTIFIER,   "arr",      nullptr, 1),
+        Token(TokenType::RIGHT_PAREN,  ")",        nullptr, 1),
+        Token(TokenType::LEFT_BRACE,   "{",        nullptr, 2),
+        Token(TokenType::RETURN,       "return",   nullptr, 3),
+        Token(TokenType::IDENTIFIER,   "arr",      nullptr, 3),
+        Token(TokenType::LEFT_BRACKET, "[",        nullptr, 3),
+        Token(TokenType::NUMBER,       "0",        0.0,     3),
+        Token(TokenType::RIGHT_BRACKET,"]",        nullptr, 3),
+        Token(TokenType::SEMICOLON,    ";",        nullptr, 3),
+        Token(TokenType::RIGHT_BRACE,  "}",        nullptr, 4),
+        // var myArr = Array(3);
+        Token(TokenType::VAR,          "var",      nullptr, 5),
+        Token(TokenType::IDENTIFIER,   "myArr",    nullptr, 5),
+        Token(TokenType::EQUAL,        "=",        nullptr, 5),
+        Token(TokenType::ARRAY,        "Array",    nullptr, 5),
+        Token(TokenType::LEFT_PAREN,   "(",        nullptr, 5),
+        Token(TokenType::NUMBER,       "3",        3.0,     5),
+        Token(TokenType::RIGHT_PAREN,  ")",        nullptr, 5),
+        Token(TokenType::SEMICOLON,    ";",        nullptr, 5),
+        // var result = getFirst(myArr);
+        Token(TokenType::VAR,          "var",      nullptr, 6),
+        Token(TokenType::IDENTIFIER,   "result",   nullptr, 6),
+        Token(TokenType::EQUAL,        "=",        nullptr, 6),
+        Token(TokenType::IDENTIFIER,   "getFirst", nullptr, 6),
+        Token(TokenType::LEFT_PAREN,   "(",        nullptr, 6),
+        Token(TokenType::IDENTIFIER,   "myArr",    nullptr, 6),
+        Token(TokenType::RIGHT_PAREN,  ")",        nullptr, 6),
+        Token(TokenType::SEMICOLON,    ";",        nullptr, 6),
+        // print result;
+        Token(TokenType::PRINT,        "print",    nullptr, 7),
+        Token(TokenType::IDENTIFIER,   "result",   nullptr, 7),
+        Token(TokenType::SEMICOLON,    ";",        nullptr, 7),
+        Token(TokenType::EOF_TOKEN,    "",         nullptr, 7),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 4u);
+
+    // Func getFirst(arr) { return arr[0]; }
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitFuncStmt(testing::_))
+            .WillOnce([](FuncStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "getFirst");
+            ASSERT_EQ(stmt.getParams().size(), 1u);
+            EXPECT_EQ(stmt.getParams()[0].getLexme(), "arr");
+
+            ASSERT_EQ(stmt.getBody().size(), 1u);
+            auto* ret = dynamic_cast<ReturnStmt*>(stmt.getBody()[0].get());
+            ASSERT_NE(ret, nullptr);
+
+            auto* get = dynamic_cast<ArrIndexGetExpr*>(ret->getValue().get());
+            ASSERT_NE(get, nullptr);
+
+            auto* obj = dynamic_cast<VariableExpr*>(get->getObject().get());
+            ASSERT_NE(obj, nullptr);
+            EXPECT_EQ(obj->getName().getLexme(), "arr");
+
+            auto* idx = dynamic_cast<LiteralExpr*>(get->getIndex().get());
+            ASSERT_NE(idx, nullptr);
+            EXPECT_DOUBLE_EQ(std::get<double>(idx->getValue()), 0.0);
+            });
+        stmts[0]->accept(mock);
+    }
+
+    // var myArr = Array(3);
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "myArr");
+            auto* call = dynamic_cast<CallExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(call, nullptr);
+            EXPECT_EQ(dynamic_cast<VariableExpr*>(call->getCallee().get())->getName().getLexme(), "Array");
+            ASSERT_EQ(call->getArguments().size(), 1u);
+            auto* size = dynamic_cast<LiteralExpr*>(call->getArguments()[0].get());
+            ASSERT_NE(size, nullptr);
+            EXPECT_DOUBLE_EQ(std::get<double>(size->getValue()), 3.0);
+            });
+        stmts[1]->accept(mock);
+    }
+
+    // var result = getFirst(myArr);
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "result");
+
+            auto* call = dynamic_cast<CallExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(call, nullptr);
+            EXPECT_EQ(dynamic_cast<VariableExpr*>(call->getCallee().get())->getName().getLexme(), "getFirst");
+
+            ASSERT_EQ(call->getArguments().size(), 1u);
+            auto* arg = dynamic_cast<VariableExpr*>(call->getArguments()[0].get());
+            ASSERT_NE(arg, nullptr);
+            EXPECT_EQ(arg->getName().getLexme(), "myArr");
+            });
+        stmts[2]->accept(mock);
+    }
+
+    // print result;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitPrintStmt(testing::_))
+            .WillOnce([](PrintStmt& stmt) {
+            auto* var = dynamic_cast<VariableExpr*>(stmt.getExpression().get());
+            ASSERT_NE(var, nullptr);
+            EXPECT_EQ(var->getName().getLexme(), "result");
+            });
+        stmts[3]->accept(mock);
+    }
+}
+
+TEST(ParserTest, ForAllClausesOmitted) {
+    std::vector<Token> tokens = {
+        // for (;;) { print 1; }
+        Token(TokenType::FOR,         "for",   nullptr, 1),
+        Token(TokenType::LEFT_PAREN,  "(",     nullptr, 1),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 1),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 1),
+        Token(TokenType::RIGHT_PAREN, ")",     nullptr, 1),
+        Token(TokenType::LEFT_BRACE,  "{",     nullptr, 1),
+        Token(TokenType::PRINT,       "print", nullptr, 2),
+        Token(TokenType::NUMBER,      "1",     1.0,     2),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 2),
+        Token(TokenType::RIGHT_BRACE, "}",     nullptr, 3),
+        Token(TokenType::EOF_TOKEN,   "",      nullptr, 3),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 1u);
+
+    MockStmtVisitor mock;
+    EXPECT_CALL(mock, visitForStmt(testing::_))
+        .WillOnce([](ForStmt& stmt) {
+        EXPECT_EQ(stmt.getInitializer().get(), nullptr);
+        EXPECT_EQ(stmt.getCondition().get(),   nullptr);
+        EXPECT_EQ(stmt.getIncrement().get(),   nullptr);
+
+        auto* body = dynamic_cast<BlockStmt*>(stmt.getBody().get());
+        ASSERT_NE(body, nullptr);
+        ASSERT_EQ(body->getStatements().size(), 1u);
+        auto* print = dynamic_cast<PrintStmt*>(body->getStatements()[0].get());
+        ASSERT_NE(print, nullptr);
+        auto* lit = dynamic_cast<LiteralExpr*>(print->getExpression().get());
+        ASSERT_NE(lit, nullptr);
+        EXPECT_DOUBLE_EQ(std::get<double>(lit->getValue()), 1.0);
+        });
+
+    stmts[0]->accept(mock);
+}
+
+TEST(ParserTest, ForInitOmitted) {
+    std::vector<Token> tokens = {
+        // for (; a < 5; a = a + 1) { print a; }
+        Token(TokenType::FOR,         "for",   nullptr, 1),
+        Token(TokenType::LEFT_PAREN,  "(",     nullptr, 1),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 1),
+        Token(TokenType::LESS,        "<",     nullptr, 1),
+        Token(TokenType::NUMBER,      "5",     5.0,     1),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 1),
+        Token(TokenType::EQUAL,       "=",     nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 1),
+        Token(TokenType::PLUS,        "+",     nullptr, 1),
+        Token(TokenType::NUMBER,      "1",     1.0,     1),
+        Token(TokenType::RIGHT_PAREN, ")",     nullptr, 1),
+        Token(TokenType::LEFT_BRACE,  "{",     nullptr, 1),
+        Token(TokenType::PRINT,       "print", nullptr, 2),
+        Token(TokenType::IDENTIFIER,  "a",     nullptr, 2),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 2),
+        Token(TokenType::RIGHT_BRACE, "}",     nullptr, 3),
+        Token(TokenType::EOF_TOKEN,   "",      nullptr, 3),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 1u);
+
+    MockStmtVisitor mock;
+    EXPECT_CALL(mock, visitForStmt(testing::_))
+        .WillOnce([](ForStmt& stmt) {
+        EXPECT_EQ(stmt.getInitializer().get(), nullptr);
+
+        auto* cond = dynamic_cast<BinaryExpr*>(stmt.getCondition().get());
+        ASSERT_NE(cond, nullptr);
+        EXPECT_EQ(cond->getOp().getTokenType(), TokenType::LESS);
+        auto* condLeft = dynamic_cast<VariableExpr*>(cond->getLeft().get());
+        ASSERT_NE(condLeft, nullptr);
+        EXPECT_EQ(condLeft->getName().getLexme(), "a");
+        auto* condRight = dynamic_cast<LiteralExpr*>(cond->getRight().get());
+        ASSERT_NE(condRight, nullptr);
+        EXPECT_DOUBLE_EQ(std::get<double>(condRight->getValue()), 5.0);
+
+        auto* incr = dynamic_cast<AssignExpr*>(stmt.getIncrement().get());
+        ASSERT_NE(incr, nullptr);
+        EXPECT_EQ(incr->getName().getLexme(), "a");
+        });
+
+    stmts[0]->accept(mock);
+}
+
+TEST(ParserTest, ForIncrementOmitted) {
+    std::vector<Token> tokens = {
+        // for (var i = 0; i < 5;) { print i; }
+        Token(TokenType::FOR,         "for",   nullptr, 1),
+        Token(TokenType::LEFT_PAREN,  "(",     nullptr, 1),
+        Token(TokenType::VAR,         "var",   nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "i",     nullptr, 1),
+        Token(TokenType::EQUAL,       "=",     nullptr, 1),
+        Token(TokenType::NUMBER,      "0",     0.0,     1),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "i",     nullptr, 1),
+        Token(TokenType::LESS,        "<",     nullptr, 1),
+        Token(TokenType::NUMBER,      "5",     5.0,     1),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 1),
+        Token(TokenType::RIGHT_PAREN, ")",     nullptr, 1),
+        Token(TokenType::LEFT_BRACE,  "{",     nullptr, 1),
+        Token(TokenType::PRINT,       "print", nullptr, 2),
+        Token(TokenType::IDENTIFIER,  "i",     nullptr, 2),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 2),
+        Token(TokenType::RIGHT_BRACE, "}",     nullptr, 3),
+        Token(TokenType::EOF_TOKEN,   "",      nullptr, 3),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 1u);
+
+    MockStmtVisitor mock;
+    EXPECT_CALL(mock, visitForStmt(testing::_))
+        .WillOnce([](ForStmt& stmt) {
+        auto* init = dynamic_cast<VarStmt*>(stmt.getInitializer().get());
+        ASSERT_NE(init, nullptr);
+        EXPECT_EQ(init->getName().getLexme(), "i");
+        auto* initVal = dynamic_cast<LiteralExpr*>(init->getInitializer().get());
+        ASSERT_NE(initVal, nullptr);
+        EXPECT_DOUBLE_EQ(std::get<double>(initVal->getValue()), 0.0);
+
+        auto* cond = dynamic_cast<BinaryExpr*>(stmt.getCondition().get());
+        ASSERT_NE(cond, nullptr);
+        EXPECT_EQ(cond->getOp().getTokenType(), TokenType::LESS);
+        auto* condLeft = dynamic_cast<VariableExpr*>(cond->getLeft().get());
+        ASSERT_NE(condLeft, nullptr);
+        EXPECT_EQ(condLeft->getName().getLexme(), "i");
+
+        EXPECT_EQ(stmt.getIncrement().get(), nullptr);
+        });
+
+    stmts[0]->accept(mock);
+}
+
 TEST(ParserTest, GroupingExpr) {
     std::vector<Token> tokens = {
         // print (1 + 2) * 3;

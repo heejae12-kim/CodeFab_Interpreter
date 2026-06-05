@@ -83,6 +83,28 @@ TEST(InterpreterExprTest, UnaryMinusOnNonNumberThrows) {
     EXPECT_THROW(runExpr(unary(TokenType::MINUS, "-", litStr("a"))), RuntimeError);
 }
 
+// '-' 연산
+TEST(InterpreterExprTest, UnaryMinusThenAddition) {
+    // -3 + 2 = -1   (print -3 + 2; 에 해당하는 트리)
+    ExprPtr e = binary(unary(TokenType::MINUS, "-", litNum(3.0)),
+                       TokenType::PLUS, "+", litNum(2.0));
+    EXPECT_EQ(runExpr(std::move(e)), "-1\n");
+}
+
+TEST(InterpreterExprTest, BinaryMinusIsLeftAssociative) {
+    // 10 - 4 - 3 = 3
+    ExprPtr e = binary(binary(litNum(10.0), TokenType::MINUS, "-", litNum(4.0)),
+                       TokenType::MINUS, "-", litNum(3.0));
+    EXPECT_EQ(runExpr(std::move(e)), "3\n");
+}
+
+TEST(InterpreterExprTest, UnaryMinusOnGrouping) {
+    // -(2 + 3) = -5
+    ExprPtr e = unary(TokenType::MINUS, "-",
+                      grouping(binary(litNum(2.0), TokenType::PLUS, "+", litNum(3.0))));
+    EXPECT_EQ(runExpr(std::move(e)), "-5\n");
+}
+
 // and / or / !
 TEST(InterpreterExprTest, LogicalAnd) {
     EXPECT_EQ(runExpr(binary(litBool(true),  TokenType::AND_OP, "and", litBool(true))),  "true\n");

@@ -10,9 +10,26 @@ std::vector<StmtPtr> Parser::parse() {
 }
 
 StmtPtr Parser::declaration() {
-    if (match({ TokenType::VAR })) return varDeclaration();
+    if (match({ TokenType::FUNC })) return funcDeclaration();
+    if (match({ TokenType::VAR }))  return varDeclaration();
     return statement();
+}
 
+StmtPtr Parser::funcDeclaration() {
+    Token name = consume(TokenType::IDENTIFIER, "Expected function name.");
+    consume(TokenType::LEFT_PAREN, "Expected '(' after function name.");
+    std::vector<Token> params_vector;
+    if (!check(TokenType::RIGHT_PAREN)) {
+        do { params_vector.push_back(consume(TokenType::IDENTIFIER, "Expected parameter name.")); }
+        while (match({ TokenType::COMMA }));
+    }
+    consume(TokenType::RIGHT_PAREN, "Expected ')' after parameters.");
+    consume(TokenType::LEFT_BRACE, "Expected '{' before function body.");
+    std::vector<StmtPtr> p_body;
+    while (!check(TokenType::RIGHT_BRACE) && !isAtEnd())
+        p_body.push_back(declaration());
+    consume(TokenType::RIGHT_BRACE, "Expected '}' after function body.");
+    return std::make_unique<FuncStmt>(std::move(name), std::move(params_vector), std::move(p_body));
 }
 
 StmtPtr Parser::varDeclaration() {
@@ -30,6 +47,7 @@ StmtPtr Parser::statement() {
     if (match({ TokenType::IF }))         return ifStatement();
     if (match({ TokenType::FOR }))        return forStatement();
     if (match({ TokenType::LEFT_BRACE })) return blockStatement();
+    if (match({ TokenType::RETURN }))     return returnStatement();
     return expressionStatement();
 }
 
@@ -62,6 +80,14 @@ StmtPtr Parser::forStatement() {
     consume(TokenType::RIGHT_PAREN, "Expected ')' after for clauses.");
     StmtPtr body = statement();
     return std::make_unique<ForStmt>(std::move(p_init), std::move(cond), std::move(incr), std::move(body));
+}
+
+StmtPtr Parser::returnStatement() {
+    Token keyword = previous();
+    ExprPtr value;
+    if (!check(TokenType::SEMICOLON)) value = expression();
+    consume(TokenType::SEMICOLON, "Expected ';' after return value.");
+    return std::make_unique<ReturnStmt>(std::move(keyword), std::move(value));
 }
 
 StmtPtr Parser::blockStatement() {
@@ -152,7 +178,34 @@ ExprPtr Parser::unary() {
         ExprPtr rhs = unary();
         return std::make_unique<UnaryExpr>(std::move(op), std::move(rhs));
     }
-    return primary();
+    return postfix();
+}
+
+ExprPtr Parser::postfix() {
+    ExprPtr expr = primary();
+    while (true) {
+        if (match({ TokenType::LEFT_PAREN })) {
+            expr = finishCall(std::move(expr));
+        } else if (match({ TokenType::LEFT_BRACKET })) {
+            Token   bracket = previous();
+            ExprPtr index   = expression();
+            consume(TokenType::RIGHT_BRACKET, "Expected ']' after index.");
+            expr = std::make_unique<ArrIndexGetExpr>(std::move(expr), std::move(index), std::move(bracket));
+        } else {
+            break;
+        }
+    }
+    return expr;
+}
+
+ExprPtr Parser::finishCall(ExprPtr callee) {
+    Token paren = previous();
+    std::vector<ExprPtr> args;
+    if (!check(TokenType::RIGHT_PAREN)) {
+        do { args.push_back(expression()); } while (match({ TokenType::COMMA }));
+    }
+    consume(TokenType::RIGHT_PAREN, "Expected ')' after arguments.");
+    return std::make_unique<CallExpr>(std::move(callee), std::move(paren), std::move(args));
 }
 
 ExprPtr Parser::primary() {

@@ -20,12 +20,14 @@ private:
 
 	StmtPtr declaration();
 	StmtPtr varDeclaration();
+	StmtPtr funcDeclaration();
 	StmtPtr statement();
 	StmtPtr expressionStatement();
 	StmtPtr printStatement();
 	StmtPtr ifStatement();
 	StmtPtr forStatement();
 	StmtPtr blockStatement();
+	StmtPtr returnStatement();
 
 	ExprPtr expression();
 	ExprPtr assignment();
@@ -35,6 +37,8 @@ private:
 	ExprPtr addition();
 	ExprPtr multiplication();
 	ExprPtr unary();
+	ExprPtr postfix();
+	ExprPtr finishCall(ExprPtr callee);
 	ExprPtr primary();
 
 	bool match(std::initializer_list<TokenType> types);

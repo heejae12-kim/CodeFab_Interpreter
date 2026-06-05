@@ -33,6 +33,9 @@ private:
     ValuableValue visitGroupingExpr(GroupingExpr& expr) override;
     ValuableValue visitVariableExpr(VariableExpr& expr) override;
     ValuableValue visitAssignExpr(AssignExpr& expr) override;
+    ValuableValue visitCallExpr(CallExpr& expr) override { return {}; };
+    ValuableValue visitIndexGetExpr(ArrIndexGetExpr& expr) override { return {}; };
+    ValuableValue visitIndexSetExpr(ArrIndexSetExpr& expr) override { return {}; };
 
     void visitPrintStmt(PrintStmt& stmt) override;
     void visitExprStmt(ExprStmt& stmt) override;

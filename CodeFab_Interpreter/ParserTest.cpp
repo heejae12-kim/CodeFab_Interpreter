@@ -925,6 +925,241 @@ TEST(ParserTest, UnaryMinus) {
     stmts[0]->accept(mock);
 }
 
+TEST(ParserTest, FuncDeclarationAndCall) {
+    std::vector<Token> tokens = {
+        // Func test_function() {
+        Token(TokenType::FUNC,        "Func",          nullptr,              1),
+        Token(TokenType::IDENTIFIER,  "test_function", nullptr,              1),
+        Token(TokenType::LEFT_PAREN,  "(",             nullptr,              1),
+        Token(TokenType::RIGHT_PAREN, ")",             nullptr,              1),
+        Token(TokenType::LEFT_BRACE,  "{",             nullptr,              2),
+        // print "hello";
+        Token(TokenType::PRINT,       "print",         nullptr,              3),
+        Token(TokenType::STRING,      "hello",         std::string("hello"), 3),
+        Token(TokenType::SEMICOLON,   ";",             nullptr,              3),
+        // return;
+        Token(TokenType::RETURN,      "return",        nullptr,              4),
+        Token(TokenType::SEMICOLON,   ";",             nullptr,              4),
+        // }
+        Token(TokenType::RIGHT_BRACE, "}",             nullptr,              5),
+        // test_function();
+        Token(TokenType::IDENTIFIER,  "test_function", nullptr,              6),
+        Token(TokenType::LEFT_PAREN,  "(",             nullptr,              6),
+        Token(TokenType::RIGHT_PAREN, ")",             nullptr,              6),
+        Token(TokenType::SEMICOLON,   ";",             nullptr,              6),
+        // print "end";
+        Token(TokenType::PRINT,       "print",         nullptr,              7),
+        Token(TokenType::STRING,      "end",           std::string("end"),   7),
+        Token(TokenType::SEMICOLON,   ";",             nullptr,              7),
+        Token(TokenType::EOF_TOKEN,   "",              nullptr,              7),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 3u);
+
+    // Func test_function() { print "hello"; }
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitFuncStmt(testing::_))
+            .WillOnce([](FuncStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "test_function");
+            EXPECT_TRUE(stmt.getParams().empty());
+            ASSERT_EQ(stmt.getBody().size(), 2u);
+
+            auto* print = dynamic_cast<PrintStmt*>(stmt.getBody()[0].get());
+            ASSERT_NE(print, nullptr);
+            auto* lit = dynamic_cast<LiteralExpr*>(print->getExpression().get());
+            ASSERT_NE(lit, nullptr);
+            ASSERT_TRUE(std::holds_alternative<std::string>(lit->getValue()));
+            EXPECT_EQ(std::get<std::string>(lit->getValue()), "hello");
+
+            auto* ret = dynamic_cast<ReturnStmt*>(stmt.getBody()[1].get());
+            ASSERT_NE(ret, nullptr);
+            EXPECT_EQ(ret->getValue().get(), nullptr);
+            });
+        stmts[0]->accept(mock);
+    }
+
+    // test_function();
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitExprStmt(testing::_))
+            .WillOnce([](ExprStmt& stmt) {
+            auto* call = dynamic_cast<CallExpr*>(stmt.getExpression().get());
+            ASSERT_NE(call, nullptr);
+
+            auto* callee = dynamic_cast<VariableExpr*>(call->getCallee().get());
+            ASSERT_NE(callee, nullptr);
+            EXPECT_EQ(callee->getName().getLexme(), "test_function");
+            EXPECT_TRUE(call->getArguments().empty());
+            });
+        stmts[1]->accept(mock);
+    }
+
+    // print "end";
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitPrintStmt(testing::_))
+            .WillOnce([](PrintStmt& stmt) {
+            auto* lit = dynamic_cast<LiteralExpr*>(stmt.getExpression().get());
+            ASSERT_NE(lit, nullptr);
+            ASSERT_TRUE(std::holds_alternative<std::string>(lit->getValue()));
+            EXPECT_EQ(std::get<std::string>(lit->getValue()), "end");
+            });
+        stmts[2]->accept(mock);
+    }
+}
+
+TEST(ParserTest, FuncWithParamsAndCall) {
+    std::vector<Token> tokens = {
+        // Func add(a, b) {
+        Token(TokenType::FUNC,        "Func",   nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "add",    nullptr, 1),
+        Token(TokenType::LEFT_PAREN,  "(",      nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "a",      nullptr, 1),
+        Token(TokenType::COMMA,       ",",      nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "b",      nullptr, 1),
+        Token(TokenType::RIGHT_PAREN, ")",      nullptr, 1),
+        Token(TokenType::LEFT_BRACE,  "{",      nullptr, 2),
+        // return a + b;
+        Token(TokenType::RETURN,      "return", nullptr, 3),
+        Token(TokenType::IDENTIFIER,  "a",      nullptr, 3),
+        Token(TokenType::PLUS,        "+",      nullptr, 3),
+        Token(TokenType::IDENTIFIER,  "b",      nullptr, 3),
+        Token(TokenType::SEMICOLON,   ";",      nullptr, 3),
+        // }
+        Token(TokenType::RIGHT_BRACE, "}",      nullptr, 4),
+        // var x = 3;
+        Token(TokenType::VAR,         "var",    nullptr, 5),
+        Token(TokenType::IDENTIFIER,  "x",      nullptr, 5),
+        Token(TokenType::EQUAL,       "=",      nullptr, 5),
+        Token(TokenType::NUMBER,      "3",      3.0,     5),
+        Token(TokenType::SEMICOLON,   ";",      nullptr, 5),
+        // var y = 4;
+        Token(TokenType::VAR,         "var",    nullptr, 6),
+        Token(TokenType::IDENTIFIER,  "y",      nullptr, 6),
+        Token(TokenType::EQUAL,       "=",      nullptr, 6),
+        Token(TokenType::NUMBER,      "4",      4.0,     6),
+        Token(TokenType::SEMICOLON,   ";",      nullptr, 6),
+        // var z = add(x, y);
+        Token(TokenType::VAR,         "var",    nullptr, 7),
+        Token(TokenType::IDENTIFIER,  "z",      nullptr, 7),
+        Token(TokenType::EQUAL,       "=",      nullptr, 7),
+        Token(TokenType::IDENTIFIER,  "add",    nullptr, 7),
+        Token(TokenType::LEFT_PAREN,  "(",      nullptr, 7),
+        Token(TokenType::IDENTIFIER,  "x",      nullptr, 7),
+        Token(TokenType::COMMA,       ",",      nullptr, 7),
+        Token(TokenType::IDENTIFIER,  "y",      nullptr, 7),
+        Token(TokenType::RIGHT_PAREN, ")",      nullptr, 7),
+        Token(TokenType::SEMICOLON,   ";",      nullptr, 7),
+        // print z;
+        Token(TokenType::PRINT,       "print",  nullptr, 8),
+        Token(TokenType::IDENTIFIER,  "z",      nullptr, 8),
+        Token(TokenType::SEMICOLON,   ";",      nullptr, 8),
+        Token(TokenType::EOF_TOKEN,   "",       nullptr, 8),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 5u);
+
+    // Func add(a, b) { return a + b; }
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitFuncStmt(testing::_))
+            .WillOnce([](FuncStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "add");
+            ASSERT_EQ(stmt.getParams().size(), 2u);
+            EXPECT_EQ(stmt.getParams()[0].getLexme(), "a");
+            EXPECT_EQ(stmt.getParams()[1].getLexme(), "b");
+
+            ASSERT_EQ(stmt.getBody().size(), 1u);
+            auto* ret = dynamic_cast<ReturnStmt*>(stmt.getBody()[0].get());
+            ASSERT_NE(ret, nullptr);
+
+            auto* bin = dynamic_cast<BinaryExpr*>(ret->getValue().get());
+            ASSERT_NE(bin, nullptr);
+            EXPECT_EQ(bin->getOp().getTokenType(), TokenType::PLUS);
+
+            auto* left = dynamic_cast<VariableExpr*>(bin->getLeft().get());
+            ASSERT_NE(left, nullptr);
+            EXPECT_EQ(left->getName().getLexme(), "a");
+
+            auto* right = dynamic_cast<VariableExpr*>(bin->getRight().get());
+            ASSERT_NE(right, nullptr);
+            EXPECT_EQ(right->getName().getLexme(), "b");
+            });
+        stmts[0]->accept(mock);
+    }
+
+    // var x = 3;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "x");
+            auto* lit = dynamic_cast<LiteralExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(lit, nullptr);
+            EXPECT_DOUBLE_EQ(std::get<double>(lit->getValue()), 3.0);
+            });
+        stmts[1]->accept(mock);
+    }
+
+    // var y = 4;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "y");
+            auto* lit = dynamic_cast<LiteralExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(lit, nullptr);
+            EXPECT_DOUBLE_EQ(std::get<double>(lit->getValue()), 4.0);
+            });
+        stmts[2]->accept(mock);
+    }
+
+    // var z = add(x, y);
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "z");
+
+            auto* call = dynamic_cast<CallExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(call, nullptr);
+
+            auto* callee = dynamic_cast<VariableExpr*>(call->getCallee().get());
+            ASSERT_NE(callee, nullptr);
+            EXPECT_EQ(callee->getName().getLexme(), "add");
+
+            ASSERT_EQ(call->getArguments().size(), 2u);
+            auto* argX = dynamic_cast<VariableExpr*>(call->getArguments()[0].get());
+            ASSERT_NE(argX, nullptr);
+            EXPECT_EQ(argX->getName().getLexme(), "x");
+
+            auto* argY = dynamic_cast<VariableExpr*>(call->getArguments()[1].get());
+            ASSERT_NE(argY, nullptr);
+            EXPECT_EQ(argY->getName().getLexme(), "y");
+            });
+        stmts[3]->accept(mock);
+    }
+
+    // print z;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitPrintStmt(testing::_))
+            .WillOnce([](PrintStmt& stmt) {
+            auto* var = dynamic_cast<VariableExpr*>(stmt.getExpression().get());
+            ASSERT_NE(var, nullptr);
+            EXPECT_EQ(var->getName().getLexme(), "z");
+            });
+        stmts[4]->accept(mock);
+    }
+}
+
 TEST(ParserTest, GroupingExpr) {
     std::vector<Token> tokens = {
         // print (1 + 2) * 3;

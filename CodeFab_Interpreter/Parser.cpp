@@ -114,6 +114,13 @@ ExprPtr Parser::assignment() {
         ExprPtr val = assignment();
         if (auto* var = dynamic_cast<VariableExpr*>(expr.get()))
             return std::make_unique<AssignExpr>(var->getName(), std::move(val));
+        if (auto* idx = dynamic_cast<ArrIndexGetExpr*>(expr.get())) {
+            Token   bracket = idx->getBracket();
+            ExprPtr obj     = idx->takeObject();
+            ExprPtr index   = idx->takeIndex();
+            return std::make_unique<ArrIndexSetExpr>(
+                std::move(obj), std::move(index), std::move(bracket), std::move(val));
+        }
         throw ParseError("[line " + std::to_string(previous().getLine()) + "] Invalid assignment target.");
     }
     return expr;
@@ -220,7 +227,7 @@ ExprPtr Parser::primary() {
         advance();
         return std::make_unique<LiteralExpr>(false);
     }
-    if (check(TokenType::IDENTIFIER)) {
+    if (check(TokenType::IDENTIFIER) || check(TokenType::ARRAY)) {
         Token tok = advance();
         return std::make_unique<VariableExpr>(std::move(tok));
     }

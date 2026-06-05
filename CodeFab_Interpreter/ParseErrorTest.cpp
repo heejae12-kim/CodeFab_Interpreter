@@ -178,6 +178,37 @@ TEST(ParserErrorTest, ForVarInitUnexpectedRightBrace) {
     EXPECT_THROW(parser.parse(), ParseError);
 }
 
+// print arr[0; → 인덱스 읽기에서 ] 누락
+TEST(ParserErrorTest, ArrayMissingRightBracketOnRead) {
+    std::vector<Token> tokens = {
+        Token(TokenType::PRINT,        "print", nullptr, 1),
+        Token(TokenType::IDENTIFIER,   "arr",   nullptr, 1),
+        Token(TokenType::LEFT_BRACKET, "[",     nullptr, 1),
+        Token(TokenType::NUMBER,       "0",     0.0,     1),
+        // RIGHT_BRACKET 누락
+        Token(TokenType::SEMICOLON,    ";",     nullptr, 1),
+        Token(TokenType::EOF_TOKEN,    "",      nullptr, 1),
+    };
+    Parser parser(tokens);
+    EXPECT_THROW(parser.parse(), ParseError);
+}
+
+// arr[0 = 5; → 인덱스 쓰기에서 ] 누락
+TEST(ParserErrorTest, ArrayMissingRightBracketOnWrite) {
+    std::vector<Token> tokens = {
+        Token(TokenType::IDENTIFIER,   "arr",   nullptr, 1),
+        Token(TokenType::LEFT_BRACKET, "[",     nullptr, 1),
+        Token(TokenType::NUMBER,       "0",     0.0,     1),
+        // RIGHT_BRACKET 누락
+        Token(TokenType::EQUAL,        "=",     nullptr, 1),
+        Token(TokenType::NUMBER,       "5",     5.0,     1),
+        Token(TokenType::SEMICOLON,    ";",     nullptr, 1),
+        Token(TokenType::EOF_TOKEN,    "",      nullptr, 1),
+    };
+    Parser parser(tokens);
+    EXPECT_THROW(parser.parse(), ParseError);
+}
+
 // add(x) = 5; → 함수 호출 결과에 대입 시도
 TEST(ParserErrorTest, InvalidAssignmentTarget) {
     std::vector<Token> tokens = {

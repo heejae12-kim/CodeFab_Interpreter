@@ -247,3 +247,20 @@ TEST_F(CheckerUnitFixture, BinaryExpressionOrOp) {
 
 	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
 }
+
+TEST_F(CheckerUnitFixture, CallExprWithArgs) {
+	// foo(1, "hello")
+	std::vector<ExprPtr> args;
+	args.push_back(numLiteral(1.0));
+	args.push_back(stringLiteral("hello"));
+
+	statement_vector.push_back(std::make_unique<ExprStmt>(
+		std::make_unique<CallExpr>(
+			std::make_unique<VariableExpr>(makeIndentifier("foo")),
+			Token(TokenType::LEFT_PAREN, "(", nullptr, 1),
+			std::move(args)
+		)
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}

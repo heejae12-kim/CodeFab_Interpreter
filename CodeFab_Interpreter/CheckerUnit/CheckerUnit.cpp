@@ -16,8 +16,9 @@ void CheckerUnit::checkStatement(Stmt& statements_node) {
 	statements_node.accept(*this);
 }
 
-void CheckerUnit::checkExpression(Expr& expression_node) {
-	expression_node.accept(*this);
+void CheckerUnit::checkExpression(ExprPtr& p_expression) {
+	if (!p_expression) return;
+	p_expression->accept(*this);
 }
 
 void CheckerUnit::addBeginBlockScope() {
@@ -65,19 +66,19 @@ ValuableValue CheckerUnit::visitLiteralExpr(LiteralExpr& expr) {
 }
 
 ValuableValue CheckerUnit::visitUnaryExpr(UnaryExpr& expr) {
-	checkExpression(*expr.getRight());
+	checkExpression(expr.getRight());
 	return nullptr;
 }
 
 ValuableValue CheckerUnit::visitBinaryExpr(BinaryExpr& expr) {
-	checkExpression(*expr.getLeft());
-	checkExpression(*expr.getRight());
+	checkExpression(expr.getLeft());
+	checkExpression(expr.getRight());
 	return nullptr;
 }
 
 ValuableValue CheckerUnit::visitGroupingExpr(GroupingExpr& expr) {
 	// ( expression ) 
-	checkExpression(*expr.getExpression());
+	checkExpression(expr.getExpression());
 	return nullptr;
 }
 
@@ -97,10 +98,16 @@ ValuableValue CheckerUnit::visitVariableExpr(VariableExpr& expr) {
 }
 
 ValuableValue CheckerUnit::visitAssignExpr(AssignExpr& expr) {
-	checkExpression(*expr.getValue());
+	checkExpression(expr.getValue());
 #ifdef USE_DISTANCE_OPTIMIZE
 	updateValueDistance(expr, expr.getName());
 #endif
+	return nullptr;
+}
+
+ValuableValue CheckerUnit::visitCallExpr(CallExpr& expr) {
+	checkExpression(expr.getCallee());
+	for (auto& arg : expr.getArguments()) checkExpression(arg);
 	return nullptr;
 }
 
@@ -109,16 +116,16 @@ ValuableValue CheckerUnit::visitAssignExpr(AssignExpr& expr) {
 #pragma region StmtVisitor
 
 void CheckerUnit::visitPrintStmt(PrintStmt& stmt) {
-	checkExpression(*stmt.getExpression());
+	checkExpression(stmt.getExpression());
 }
 
 void CheckerUnit::visitExprStmt(ExprStmt& stmt) {
-	checkExpression(*stmt.getExpression());
+	checkExpression(stmt.getExpression());
 }
 
 void CheckerUnit::visitVarStmt(VarStmt& stmt) {
 	declareValue(stmt.getName());
-	if (stmt.getInitializer()) checkExpression(*stmt.getInitializer());
+	if (stmt.getInitializer()) checkExpression(stmt.getInitializer());
 	defineValue(stmt.getName());
 }
 
@@ -129,7 +136,7 @@ void CheckerUnit::visitBlockStmt(BlockStmt& stmt) {
 }
 
 void CheckerUnit::visitIfStmt(IfStmt& stmt) {
-	checkExpression(*stmt.getCondition());
+	checkExpression(stmt.getCondition());
 	checkStatement(*stmt.getThenBranch());
 
 	if (stmt.getElseBranch())
@@ -140,8 +147,8 @@ void CheckerUnit::visitForStmt(ForStmt& stmt) {
 	addBeginBlockScope();
 
 	if (stmt.getInitializer()) checkStatement(*stmt.getInitializer());
-	if (stmt.getCondition())   checkExpression(*stmt.getCondition());
-	if (stmt.getIncrement())   checkExpression(*stmt.getIncrement());
+	if (stmt.getCondition())   checkExpression(stmt.getCondition());
+	if (stmt.getIncrement())   checkExpression(stmt.getIncrement());
 	checkStatement(*stmt.getBody());
 
 	addEndBlockScope();

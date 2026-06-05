@@ -121,6 +121,19 @@ ValuableValue CheckerUnit::visitCallExpr(CallExpr& expr) {
 	return nullptr;
 }
 
+ValuableValue CheckerUnit::visitIndexGetExpr(ArrIndexGetExpr& expr) {
+	checkExpression(expr.getObject());
+	checkExpression(expr.getIndex());
+	return nullptr;
+}
+
+ValuableValue CheckerUnit::visitIndexSetExpr(ArrIndexSetExpr& expr) {
+	checkExpression(expr.getObject());
+	checkExpression(expr.getIndex());
+	checkExpression(expr.getValue());
+	return nullptr;
+}
+
 #pragma endregion
 
 #pragma region StmtVisitor

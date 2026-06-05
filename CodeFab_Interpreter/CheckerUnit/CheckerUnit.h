@@ -39,8 +39,8 @@ private:
 	ValuableValue visitVariableExpr(VariableExpr& expr) override;
 	ValuableValue visitAssignExpr(AssignExpr& expr) override;
 	ValuableValue visitCallExpr(CallExpr& expr) override;
-	ValuableValue visitIndexGetExpr(ArrIndexGetExpr& expr) override { return {}; };
-	ValuableValue visitIndexSetExpr(ArrIndexSetExpr& expr) override { return {}; };
+	ValuableValue visitIndexGetExpr(ArrIndexGetExpr& expr) override;
+	ValuableValue visitIndexSetExpr(ArrIndexSetExpr& expr) override;
 
 #pragma endregion
 

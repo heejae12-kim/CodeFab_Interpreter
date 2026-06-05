@@ -3,6 +3,13 @@
 #include <sstream>
 #include <cmath>
 
+// return 문 처리를 위한 제어 흐름 예외 (호출 스택을 함수 경계까지 unwind)
+namespace {
+    struct ReturnException {
+        ValuableValue value;
+    };
+}
+
 Interpreter::Interpreter() {
     globalEnv  = std::make_shared<Environment>();
     currentEnv = globalEnv;
@@ -35,6 +42,8 @@ bool Interpreter::isEqual(const ValuableValue& a, const ValuableValue& b) {
     if (std::holds_alternative<double>(a)) return std::get<double>(a) == std::get<double>(b);
     if (std::holds_alternative<std::string>(a))
         return std::get<std::string>(a) == std::get<std::string>(b);
+    if (std::holds_alternative<ArrayPtr>(a))
+        return std::get<ArrayPtr>(a) == std::get<ArrayPtr>(b);   // 포인터 동일성
     return false;
 }
 
@@ -50,6 +59,15 @@ std::string Interpreter::stringify(const ValuableValue& v) {
         std::ostringstream oss;
         oss << d;
         return oss.str();
+    }
+    if (std::holds_alternative<ArrayPtr>(v)) {
+        const auto& elements = std::get<ArrayPtr>(v)->elements;
+        std::string out = "[";
+        for (std::size_t i = 0; i < elements.size(); ++i) {
+            if (i) out += ", ";
+            out += stringify(elements[i]);
+        }
+        return out + "]";
     }
     return "";
 }
@@ -166,6 +184,93 @@ ValuableValue Interpreter::visitAssignExpr(AssignExpr& expr) {
     return val;
 }
 
+// [B안] 호출은 인터프리터가 중앙에서 절차적으로 분기한다.
+//  - 호출 대상은 반드시 이름(VariableExpr) 이어야 한다 (함수는 1급 값이 아님).
+//  - 내장 Array(n) 와 사용자 정의 함수(함수표)를 if/lookup 으로 구분한다.
+ValuableValue Interpreter::visitCallExpr(CallExpr& expr) {
+    auto* callee_name = dynamic_cast<VariableExpr*>(expr.getCallee().get());
+    if (!callee_name)
+        throw RuntimeError(expr.getParen(), "Can only call named functions.");
+    const std::string name = callee_name->getName().getLexme();
+
+    std::vector<ValuableValue> arguments;
+    for (auto& argument : expr.getArguments())
+        arguments.push_back(evaluate(*argument));
+
+    if (name == "Array")                       // 내장 배열 생성
+        return makeArray(arguments, expr.getParen());
+
+    auto found = functions_.find(name);        // 사용자 정의 함수
+    if (found == functions_.end())
+        throw RuntimeError(expr.getParen(), "'" + name + "' is not a function.");
+    return callFunction(*found->second, arguments, expr.getParen());
+}
+
+ValuableValue Interpreter::callFunction(FuncStmt& fn, std::vector<ValuableValue>& args,
+                                        const Token& paren) {
+    if (args.size() != fn.getParams().size())
+        throw RuntimeError(paren, "Expected " + std::to_string(fn.getParams().size()) +
+            " arguments but got " + std::to_string(args.size()) + ".");
+
+    auto env = std::make_shared<Environment>(globalEnv); // B안: 함수는 전역만 본다(클로저 없음)
+    const auto& params = fn.getParams();
+    for (std::size_t i = 0; i < params.size(); ++i)
+        env->define(params[i].getLexme(), args[i]);
+
+    try {
+        executeBlock(fn.getBody(), env);
+    }
+    catch (const ReturnException& returned) {
+        return returned.value;
+    }
+    return nullptr; // return 문이 없으면 nil
+}
+
+ValuableValue Interpreter::makeArray(std::vector<ValuableValue>& args, const Token& paren) {
+    if (args.size() != 1)
+        throw RuntimeError(paren, "Array expects exactly 1 argument (size).");
+    if (!std::holds_alternative<double>(args[0]))
+        throw RuntimeError(paren, "Array size must be a number.");
+    double size = std::get<double>(args[0]);
+    if (size < 0)
+        throw RuntimeError(paren, "Array size must not be negative.");
+    return std::make_shared<ArrayValue>(static_cast<std::size_t>(size));
+}
+
+ValuableValue Interpreter::visitIndexGetExpr(ArrIndexGetExpr& expr) {
+    ValuableValue object = evaluate(*expr.getObject());
+    if (!std::holds_alternative<ArrayPtr>(object))
+        throw RuntimeError(expr.getBracket(), "Only arrays support index access.");
+    ArrayPtr array = std::get<ArrayPtr>(object);
+
+    ValuableValue index = evaluate(*expr.getIndex());
+    if (!std::holds_alternative<double>(index))
+        throw RuntimeError(expr.getBracket(), "Array index must be a number.");
+    int i = static_cast<int>(std::get<double>(index));
+    if (i < 0 || i >= static_cast<int>(array->elements.size()))
+        throw RuntimeError(expr.getBracket(), "Array index out of range.");
+
+    return array->elements[i];
+}
+
+ValuableValue Interpreter::visitIndexSetExpr(ArrIndexSetExpr& expr) {
+    ValuableValue object = evaluate(*expr.getObject());
+    if (!std::holds_alternative<ArrayPtr>(object))
+        throw RuntimeError(expr.getBracket(), "Only arrays support index access.");
+    ArrayPtr array = std::get<ArrayPtr>(object);
+
+    ValuableValue index = evaluate(*expr.getIndex());
+    if (!std::holds_alternative<double>(index))
+        throw RuntimeError(expr.getBracket(), "Array index must be a number.");
+    int i = static_cast<int>(std::get<double>(index));
+    if (i < 0 || i >= static_cast<int>(array->elements.size()))
+        throw RuntimeError(expr.getBracket(), "Array index out of range.");
+
+    ValuableValue value = evaluate(*expr.getValue());
+    array->elements[i] = value;
+    return value;
+}
+
 // ── StmtVisitor ────────────────────────────────────────────────────────────────
 
 void Interpreter::visitPrintStmt(PrintStmt& stmt) {
@@ -210,4 +315,15 @@ void Interpreter::visitForStmt(ForStmt& stmt) {
         throw;
     }
     currentEnv = saved;
+}
+
+// [B안] 함수 선언은 인터프리터의 함수표에 등록만 한다 (값으로 만들지 않음).
+void Interpreter::visitFuncStmt(FuncStmt& stmt) {
+    functions_[stmt.getName().getLexme()] = &stmt;
+}
+
+void Interpreter::visitReturnStmt(ReturnStmt& stmt) {
+    ValuableValue value = nullptr;
+    if (stmt.getValue()) value = evaluate(*stmt.getValue());
+    throw ReturnException{ std::move(value) };
 }

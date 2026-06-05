@@ -3,6 +3,8 @@
 #include "Environment.h"
 #include <memory>
 #include <vector>
+#include <string>
+#include <unordered_map>
 
 // Stmt/Expr를 DFS 실행한다.
 //   - Expr : 값을 평가하여 ValuableValue 반환
@@ -16,6 +18,11 @@ public:
 private:
     std::shared_ptr<Environment> globalEnv;
     std::shared_ptr<Environment> currentEnv;
+
+    // [B안] 함수는 값이 아니라 인터프리터가 중앙에서 관리하는 함수표에 보관한다.
+    std::unordered_map<std::string, FuncStmt*> functions_;
+    ValuableValue callFunction(FuncStmt& fn, std::vector<ValuableValue>& args, const Token& paren);
+    ValuableValue makeArray(std::vector<ValuableValue>& args, const Token& paren);
 
     ValuableValue evaluate(Expr& expr);
     void          execute(Stmt& stmt);
@@ -33,9 +40,9 @@ private:
     ValuableValue visitGroupingExpr(GroupingExpr& expr) override;
     ValuableValue visitVariableExpr(VariableExpr& expr) override;
     ValuableValue visitAssignExpr(AssignExpr& expr) override;
-    ValuableValue visitCallExpr(CallExpr& expr) override { return {}; };
-    ValuableValue visitIndexGetExpr(ArrIndexGetExpr& expr) override { return {}; };
-    ValuableValue visitIndexSetExpr(ArrIndexSetExpr& expr) override { return {}; };
+    ValuableValue visitCallExpr(CallExpr& expr) override;
+    ValuableValue visitIndexGetExpr(ArrIndexGetExpr& expr) override;
+    ValuableValue visitIndexSetExpr(ArrIndexSetExpr& expr) override;
 
     void visitPrintStmt(PrintStmt& stmt) override;
     void visitExprStmt(ExprStmt& stmt) override;
@@ -44,6 +51,6 @@ private:
     void visitIfStmt(IfStmt& stmt) override;
     void visitForStmt(ForStmt& stmt) override;
 
-    void visitFuncStmt(FuncStmt& stmt) override {};
-    void visitReturnStmt(ReturnStmt& stmt) override {};
+    void visitFuncStmt(FuncStmt& stmt) override;
+    void visitReturnStmt(ReturnStmt& stmt) override;
 };

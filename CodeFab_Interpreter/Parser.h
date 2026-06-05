@@ -30,7 +30,6 @@ private:
 	StmtPtr returnStatement();
 
 	ExprPtr parseBinary(std::function<ExprPtr()> next, std::vector<TokenType> ops);
-
 	ExprPtr expression();
 	ExprPtr assignment();
 	ExprPtr logicalOr();

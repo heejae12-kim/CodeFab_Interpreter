@@ -741,6 +741,95 @@ TEST(ParserTest, AndOperator) {
     stmts[0]->accept(mock);
 }
 
+TEST(ParserTest, UnaryBang) {
+    std::vector<Token> tokens = {
+        // var a = !true;
+        Token(TokenType::VAR,        "var",  nullptr, 1),
+        Token(TokenType::IDENTIFIER, "a",    nullptr, 1),
+        Token(TokenType::EQUAL,      "=",    nullptr, 1),
+        Token(TokenType::BANG,       "!",    nullptr, 1),
+        Token(TokenType::TRUE_KW,    "true", true,    1),
+        Token(TokenType::SEMICOLON,  ";",    nullptr, 1),
+        Token(TokenType::EOF_TOKEN,  "",     nullptr, 1),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 1u);
+
+    MockStmtVisitor mock;
+    EXPECT_CALL(mock, visitVarStmt(testing::_))
+        .WillOnce([](VarStmt& stmt) {
+        EXPECT_EQ(stmt.getName().getLexme(), "a");
+
+        auto* unary = dynamic_cast<UnaryExpr*>(stmt.getInitializer().get());
+        ASSERT_NE(unary, nullptr);
+        EXPECT_EQ(unary->getOp().getTokenType(), TokenType::BANG);
+
+        auto* lit = dynamic_cast<LiteralExpr*>(unary->getRight().get());
+        ASSERT_NE(lit, nullptr);
+        ASSERT_TRUE(std::holds_alternative<bool>(lit->getValue()));
+        EXPECT_EQ(std::get<bool>(lit->getValue()), true);
+        });
+
+    stmts[0]->accept(mock);
+}
+
+TEST(ParserTest, UnaryBangVariable) {
+    std::vector<Token> tokens = {
+        // var a = true;
+        Token(TokenType::VAR,        "var",  nullptr, 1),
+        Token(TokenType::IDENTIFIER, "a",    nullptr, 1),
+        Token(TokenType::EQUAL,      "=",    nullptr, 1),
+        Token(TokenType::TRUE_KW,    "true", true,    1),
+        Token(TokenType::SEMICOLON,  ";",    nullptr, 1),
+        // var b = !a;
+        Token(TokenType::VAR,        "var",  nullptr, 2),
+        Token(TokenType::IDENTIFIER, "b",    nullptr, 2),
+        Token(TokenType::EQUAL,      "=",    nullptr, 2),
+        Token(TokenType::BANG,       "!",    nullptr, 2),
+        Token(TokenType::IDENTIFIER, "a",    nullptr, 2),
+        Token(TokenType::SEMICOLON,  ";",    nullptr, 2),
+        Token(TokenType::EOF_TOKEN,  "",     nullptr, 2),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 2u);
+
+    // var a = true;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "a");
+            auto* lit = dynamic_cast<LiteralExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(lit, nullptr);
+            ASSERT_TRUE(std::holds_alternative<bool>(lit->getValue()));
+            EXPECT_EQ(std::get<bool>(lit->getValue()), true);
+            });
+        stmts[0]->accept(mock);
+    }
+
+    // var b = !a;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "b");
+            auto* unary = dynamic_cast<UnaryExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(unary, nullptr);
+            EXPECT_EQ(unary->getOp().getTokenType(), TokenType::BANG);
+            auto* var = dynamic_cast<VariableExpr*>(unary->getRight().get());
+            ASSERT_NE(var, nullptr);
+            EXPECT_EQ(var->getName().getLexme(), "a");
+            });
+        stmts[1]->accept(mock);
+    }
+}
+
 TEST(ParserTest, UnaryMinus) {
     std::vector<Token> tokens = {
         // var a = -3;

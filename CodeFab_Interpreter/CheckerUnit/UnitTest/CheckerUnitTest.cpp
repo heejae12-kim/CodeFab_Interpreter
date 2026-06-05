@@ -264,3 +264,108 @@ TEST_F(CheckerUnitFixture, CallExprWithArgs) {
 
 	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
 }
+
+TEST_F(CheckerUnitFixture, FuncDeclareNoParams) {
+	// func foo() { }
+	statement_vector.push_back(std::make_unique<FuncStmt>(
+		makeIndentifier("foo"),
+		std::vector<Token>{},
+		std::vector<StmtPtr>{}
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}
+
+TEST_F(CheckerUnitFixture, FuncDeclareWithParams) {
+	// func foo(a, b) { }
+	statement_vector.push_back(std::make_unique<FuncStmt>(
+		makeIndentifier("foo"),
+		std::vector<Token>{ makeIndentifier("a"), makeIndentifier("b") },
+		std::vector<StmtPtr>{}
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}
+
+TEST_F(CheckerUnitFixture, FuncDuplicateParamThrows) {
+	// func foo(a, a) { }
+	statement_vector.push_back(std::make_unique<FuncStmt>(
+		makeIndentifier("foo"),
+		std::vector<Token>{ makeIndentifier("a"), makeIndentifier("a") },
+		std::vector<StmtPtr>{}
+	));
+
+	try {
+		p_checker_unit->doChecker(statement_vector);
+		FAIL() << "The CheckerError should occur.";
+	}
+	catch (const CheckerError& e) {
+		EXPECT_THAT(std::string(e.what()), HasSubstr("Duplicate parameter name"));
+	}
+}
+
+TEST_F(CheckerUnitFixture, FuncBodyCanAccessParams) {
+	// func foo(x) { print x; }
+	std::vector<StmtPtr> body;
+	body.push_back(std::make_unique<PrintStmt>(
+		std::make_unique<VariableExpr>(makeIndentifier("x"))
+	));
+
+	statement_vector.push_back(std::make_unique<FuncStmt>(
+		makeIndentifier("foo"),
+		std::vector<Token>{ makeIndentifier("x") },
+		std::move(body)
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}
+
+TEST_F(CheckerUnitFixture, ReturnInsideFunction) {
+	// func foo() { return 1; }
+	std::vector<StmtPtr> body;
+	body.push_back(std::make_unique<ReturnStmt>(
+		Token(TokenType::IDENTIFIER, "return", nullptr, 1),
+		numLiteral(1.0)
+	));
+
+	statement_vector.push_back(std::make_unique<FuncStmt>(
+		makeIndentifier("foo"),
+		std::vector<Token>{},
+		std::move(body)
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}
+
+TEST_F(CheckerUnitFixture, ReturnAtTopLevelThrows) {
+	// return 1;
+	statement_vector.push_back(std::make_unique<ReturnStmt>(
+		Token(TokenType::IDENTIFIER, "return", nullptr, 1),
+		numLiteral(1.0)
+	));
+
+	try {
+		p_checker_unit->doChecker(statement_vector);
+		FAIL() << "The CheckerError should occur.";
+	}
+	catch (const CheckerError& e) {
+		EXPECT_THAT(std::string(e.what()), HasSubstr("Can't return from top-level code"));
+	}
+}
+
+TEST_F(CheckerUnitFixture, ReturnWithoutValue) {
+	// func foo() { return; }
+	std::vector<StmtPtr> body;
+	body.push_back(std::make_unique<ReturnStmt>(
+		Token(TokenType::IDENTIFIER, "return", nullptr, 1),
+		nullptr
+	));
+
+	statement_vector.push_back(std::make_unique<FuncStmt>(
+		makeIndentifier("foo"),
+		std::vector<Token>{},
+		std::move(body)
+	));
+
+	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
+}

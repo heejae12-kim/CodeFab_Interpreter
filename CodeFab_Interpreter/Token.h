@@ -13,7 +13,7 @@ enum class TokenType {
     LESS, LESS_EQUAL,
     GREATER, GREATER_EQUAL,
     EQUAL, EQUAL_EQUAL,
-    BANG_EQUAL,
+    BANG_EQUAL, 
 
     // Literals
     NUMBER, STRING, IDENTIFIER,
@@ -21,6 +21,9 @@ enum class TokenType {
     // Keywords
     VAR, IF, ELSE, FOR, PRINT,
     TRUE_KW, FALSE_KW,
+
+    // Boolean Operator
+    AND_OP, OR_OP, BANG,
 
     EOF_TOKEN
 };

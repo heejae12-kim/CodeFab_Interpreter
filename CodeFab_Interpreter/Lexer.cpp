@@ -12,6 +12,8 @@ static const std::unordered_map<std::string, TokenType> keywords = {
     {"false",  TokenType::FALSE_KW},
     {"Func",   TokenType::FUNC},   // 함수 선언 키워드 (PDF 원문 기준 대문자 F)
     {"return", TokenType::RETURN}, // 반환문 키워드
+    {"and",    TokenType::AND_OP}, // 논리 AND 연산자
+    {"or",     TokenType::OR_OP},  // 논리 OR 연산자
 };
 
 Lexer::Lexer(std::string source) : source_(std::move(source)) {}
@@ -64,13 +66,7 @@ void Lexer::scanToken() {
     case '<': addToken(match('=') ? TokenType::LESS_EQUAL    : TokenType::LESS);    break;
     case '>': addToken(match('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER); break;
     case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL   : TokenType::EQUAL);   break;
-    case '!':
-        if (match('=')) {
-            addToken(TokenType::BANG_EQUAL);
-        } else {
-            throw LexError(line_, std::string("unexpected character '") + c + "'");
-        }
-        break;
+    case '!': addToken(match('=') ? TokenType::BANG_EQUAL : TokenType::BANG); break;
     case '"': scanString(); break;
     case ' ': case '\r': case '\t': break;
     case '\n': ++line_; break;

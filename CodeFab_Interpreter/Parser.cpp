@@ -25,11 +25,11 @@ StmtPtr Parser::funcDeclaration() {
 	}
 	consume(TokenType::RIGHT_PAREN, "Expected ')' after parameters.");
 	consume(TokenType::LEFT_BRACE, "Expected '{' before function body.");
-	std::vector<StmtPtr> p_body;
+	std::vector<StmtPtr> body_vector;
 	while (!check(TokenType::RIGHT_BRACE) && !isAtEnd())
-		p_body.push_back(declaration());
+		body_vector.push_back(declaration());
 	consume(TokenType::RIGHT_BRACE, "Expected '}' after function body.");
-	return std::make_unique<FuncStmt>(std::move(name), std::move(params_vector), std::move(p_body));
+	return std::make_unique<FuncStmt>(std::move(name), std::move(params_vector), std::move(body_vector));
 }
 
 StmtPtr Parser::varDeclaration() {
@@ -52,20 +52,20 @@ StmtPtr Parser::statement() {
 }
 
 StmtPtr Parser::printStatement() {
-	ExprPtr value = expression();
+	ExprPtr p_value = expression();
 	consume(TokenType::SEMICOLON, "Expected ';' after value.");
 
-	return std::make_unique<PrintStmt>(std::move(value));
+	return std::make_unique<PrintStmt>(std::move(p_value));
 }
 
 StmtPtr Parser::ifStatement() {
 	consume(TokenType::LEFT_PAREN, "Expected '(' after 'if'.");
-	ExprPtr cond = comparison();
+	ExprPtr p_cond = comparison();
 	consume(TokenType::RIGHT_PAREN, "Expected ')' after if condition.");
-	StmtPtr thenBranch = statement();
-	StmtPtr elseBranch;
-	if (match({ TokenType::ELSE })) elseBranch = statement();
-	return std::make_unique<IfStmt>(std::move(cond), std::move(thenBranch), std::move(elseBranch));
+	StmtPtr p_thenBranch = statement();
+	StmtPtr p_elseBranch;
+	if (match({ TokenType::ELSE })) p_elseBranch = statement();
+	return std::make_unique<IfStmt>(std::move(p_cond), std::move(p_thenBranch), std::move(p_elseBranch));
 }
 
 StmtPtr Parser::forStatement() {
@@ -76,24 +76,24 @@ StmtPtr Parser::forStatement() {
 	else if (!check(TokenType::SEMICOLON)) p_init = expressionStatement();
 	else                                   consume(TokenType::SEMICOLON, "");
 
-	ExprPtr cond;
-	if (!check(TokenType::SEMICOLON)) cond = comparison();
+	ExprPtr p_cond;
+	if (!check(TokenType::SEMICOLON)) p_cond = comparison();
 	consume(TokenType::SEMICOLON, "Expected ';' after for condition.");
 
-	ExprPtr incr;
-	if (!check(TokenType::RIGHT_PAREN)) incr = assignment();
+	ExprPtr p_incr;
+	if (!check(TokenType::RIGHT_PAREN)) p_incr = assignment();
 	consume(TokenType::RIGHT_PAREN, "Expected ')' after for clauses.");
 
-	StmtPtr body = statement();
-	return std::make_unique<ForStmt>(std::move(p_init), std::move(cond), std::move(incr), std::move(body));
+	StmtPtr p_body = statement();
+	return std::make_unique<ForStmt>(std::move(p_init), std::move(p_cond), std::move(p_incr), std::move(p_body));
 }
 
 StmtPtr Parser::returnStatement() {
 	Token keyword = previous();
-	ExprPtr value;
-	if (!check(TokenType::SEMICOLON)) value = expression();
+	ExprPtr p_value;
+	if (!check(TokenType::SEMICOLON)) p_value = expression();
 	consume(TokenType::SEMICOLON, "Expected ';' after return value.");
-	return std::make_unique<ReturnStmt>(std::move(keyword), std::move(value));
+	return std::make_unique<ReturnStmt>(std::move(keyword), std::move(p_value));
 }
 
 StmtPtr Parser::blockStatement() {
@@ -105,9 +105,9 @@ StmtPtr Parser::blockStatement() {
 }
 
 StmtPtr Parser::expressionStatement() {
-	ExprPtr expr = expression();
+	ExprPtr p_expr = expression();
 	consume(TokenType::SEMICOLON, "Expected ';' after expression.");
-	return std::make_unique<ExprStmt>(std::move(expr));
+	return std::make_unique<ExprStmt>(std::move(p_expr));
 }
 
 ExprPtr Parser::expression() {
@@ -115,12 +115,12 @@ ExprPtr Parser::expression() {
 }
 
 ExprPtr Parser::assignment() {
-	ExprPtr expr = logicalOr();
+	ExprPtr p_expr = logicalOr();
 	if (match({ TokenType::EQUAL })) {
 		ExprPtr val = assignment();
-		if (auto* var = dynamic_cast<VariableExpr*>(expr.get()))
+		if (auto* var = dynamic_cast<VariableExpr*>(p_expr.get()))
 			return std::make_unique<AssignExpr>(var->getName(), std::move(val));
-		if (auto* idx = dynamic_cast<ArrIndexGetExpr*>(expr.get())) {
+		if (auto* idx = dynamic_cast<ArrIndexGetExpr*>(p_expr.get())) {
 			Token   bracket = idx->getBracket();
 			ExprPtr obj     = idx->takeObject();
 			ExprPtr index   = idx->takeIndex();
@@ -129,17 +129,17 @@ ExprPtr Parser::assignment() {
 		}
 		throw ParseError("[line " + std::to_string(previous().getLine()) + "] Invalid assignment target.");
 	}
-	return expr;
+	return p_expr;
 }
 
 ExprPtr Parser::parseBinary(std::function<ExprPtr()> next, std::vector<TokenType> ops) {
-	ExprPtr expr = next();
+	ExprPtr p_expr = next();
 	while (match(ops)) {
 		Token   op  = previous();
 		ExprPtr rhs = next();
-		expr = std::make_unique<BinaryExpr>(std::move(expr), std::move(op), std::move(rhs));
+		p_expr = std::make_unique<BinaryExpr>(std::move(p_expr), std::move(op), std::move(rhs));
 	}
-	return expr;
+	return p_expr;
 }
 
 ExprPtr Parser::logicalOr()      { return parseBinary([this] { return logicalAnd(); },     { TokenType::OR_OP }); }
@@ -165,30 +165,30 @@ ExprPtr Parser::unary() {
 }
 
 ExprPtr Parser::postfix() {
-	ExprPtr expr = primary();
+	ExprPtr p_expr = primary();
 	while (true) {
 		if (match({ TokenType::LEFT_PAREN })) {
-			expr = finishCall(std::move(expr));
+			p_expr = finishCall(std::move(p_expr));
 		} else if (match({ TokenType::LEFT_BRACKET })) {
 			Token   bracket = previous();
-			ExprPtr index   = expression();
+			ExprPtr p_index   = expression();
 			consume(TokenType::RIGHT_BRACKET, "Expected ']' after index.");
-			expr = std::make_unique<ArrIndexGetExpr>(std::move(expr), std::move(index), std::move(bracket));
+			p_expr = std::make_unique<ArrIndexGetExpr>(std::move(p_expr), std::move(p_index), std::move(bracket));
 		} else {
 			break;
 		}
 	}
-	return expr;
+	return p_expr;
 }
 
 ExprPtr Parser::finishCall(ExprPtr callee) {
 	Token paren = previous();
-	std::vector<ExprPtr> args;
+	std::vector<ExprPtr> args_vector;
 	if (!check(TokenType::RIGHT_PAREN)) {
-		do { args.push_back(expression()); } while (match({ TokenType::COMMA }));
+		do { args_vector.push_back(expression()); } while (match({ TokenType::COMMA }));
 	}
 	consume(TokenType::RIGHT_PAREN, "Expected ')' after arguments.");
-	return std::make_unique<CallExpr>(std::move(callee), std::move(paren), std::move(args));
+	return std::make_unique<CallExpr>(std::move(callee), std::move(paren), std::move(args_vector));
 }
 
 ExprPtr Parser::primary() {
@@ -207,9 +207,9 @@ ExprPtr Parser::primary() {
 		return std::make_unique<VariableExpr>(std::move(tok));
 	}
 	if (match({ TokenType::LEFT_PAREN })) {
-		ExprPtr expr = expression();
+		ExprPtr p_expr = expression();
 		consume(TokenType::RIGHT_PAREN, "Expected ')' after expression.");
-		return std::make_unique<GroupingExpr>(std::move(expr));
+		return std::make_unique<GroupingExpr>(std::move(p_expr));
 	}
 	throw ParseError("[line " + std::to_string(peek().getLine()) + "] Syntax Error at '" + peek().getLexme() + "': Expected expression.");
 }
@@ -236,8 +236,8 @@ Token& Parser::previous() {
 }
 
 bool Parser::match(std::vector<TokenType> types) {
-	for (auto t : types) {
-		if (check(t)) { advance(); return true; }
+	for (auto type : types) {
+		if (check(type)) { advance(); return true; }
 	}
 	return false;
 }

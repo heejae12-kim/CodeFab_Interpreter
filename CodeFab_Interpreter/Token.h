@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <variant>
+#include <vector>
+#include <memory>
 
 enum class TokenType {
     // Single-char tokens
@@ -32,8 +34,18 @@ enum class TokenType {
     EOF_TOKEN
 };
 
-// Runtime value type: number, string, bool, or nil
-using ValuableValue = std::variant<double, std::string, bool, std::nullptr_t>;
+// 배열 값 타입 — ValuableValue의 재귀 구조를 위해 forward declaration 사용
+class ArrayValue;
+using ArrayPtr = std::shared_ptr<ArrayValue>;
+
+// Runtime value type: number, string, bool, nil, array
+using ValuableValue = std::variant<double, std::string, bool, std::nullptr_t, ArrayPtr>;
+
+class ArrayValue {
+public:
+    std::vector<ValuableValue> elements;
+    explicit ArrayValue(std::size_t size) : elements(size, nullptr) {}
+};
 
 class Token {
 public:

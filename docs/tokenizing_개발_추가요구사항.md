@@ -334,4 +334,76 @@ PR 생성 후 팀원 코드 리뷰 진행.
 
 ---
 
+## 세션 015 — ArrayValue 타입 추가 및 ValuableValue 확장 (2026-06-05)
+
+### 커밋
+```
+(이번 커밋에 포함)
+```
+
+### 사용자 프롬프트 원문
+```
+지금 array 라는 것도 keyword 뿐만 이나라 변수 type 으로도 사용이 되어야 하는데,
+해당 부분에 대한 고려가 빠져있어. number, string 같은 것과 동일한 레벨이 될 수
+있도록 lexer 까지 수정해줘.
+```
+
+```
+잘 접근하였는데, 개발 rule 있어서, structure 가 아니라 class 로 선언해주고,
+public 지시어로 접근할 수 있도록 변경하고 진행해줘
+```
+
+### 주목적
+`Array`를 생성 키워드로만 사용하는 것을 넘어, `number(double)`, `string`, `bool`, `nil` 과 동일한 레벨의 런타임 값 타입으로 `ValuableValue`에 포함시킨다.
+
+### 설계 포인트 — 재귀 타입 문제 해결
+
+`ArrayValue`는 내부에 `std::vector<ValuableValue>`를 가지므로 `ValuableValue`가 자기 자신을 포함하는 재귀 구조가 된다. `std::variant`는 불완전 타입을 직접 받을 수 없으므로 **forward declaration + shared_ptr** 패턴으로 해결한다.
+
+```cpp
+class ArrayValue;                          // 1. forward declaration
+using ArrayPtr = std::shared_ptr<ArrayValue>;  // 2. 포인터 alias
+
+// 3. ArrayPtr로 variant에 포함 (ArrayValue 완전 정의 전에도 가능)
+using ValuableValue = std::variant<double, std::string, bool, std::nullptr_t, ArrayPtr>;
+
+class ArrayValue {                         // 4. 완전 정의 (ValuableValue 완성 후)
+public:
+    std::vector<ValuableValue> elements;
+    explicit ArrayValue(std::size_t size) : elements(size, nullptr) {}
+};
+```
+
+### 변경 파일
+
+| 파일 | 변경 유형 | 내용 |
+|------|-----------|------|
+| `Token.h` | 수정 | `#include <vector>`, `<memory>` 추가 / `ArrayValue` class 정의 / `ValuableValue`에 `ArrayPtr` 추가 |
+
+### 변경 전 / 후 비교
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| `ValuableValue` | `variant<double, string, bool, nullptr_t>` | `variant<double, string, bool, nullptr_t, ArrayPtr>` |
+| 배열 타입 | 없음 | `ArrayValue` class (`elements` + 생성자) |
+| 코드 컨벤션 | — | `class` + `public:` 지시어 (팀 규칙 준수) |
+
+### 테스트 결과
+```
+[==========] Running 86 tests from 7 test suites.
+[  PASSED  ] 86 tests.
+```
+
+### 현재 TDD 단계
+```
+[RED]      테스트 케이스 미추가 (배열 값 타입 관련 TC 작성 예정)
+[GREEN]    기존 86개 전부 통과 확인
+[REFACTOR] 미착수
+```
+
+### 다음 세션 목표
+PR 생성 및 팀원 코드 리뷰 진행.
+
+---
+
 *이 문서는 세션이 종료될 때마다 새 세션 항목을 추가하여 누적 관리한다.*

@@ -5,9 +5,9 @@ ValuableValue FunctionObject::call(Interpreter& interpreter, std::vector<Valuabl
                                    const Token& /*paren*/) {
     // 호출마다 closure를 부모로 하는 새 환경을 만들고 파라미터를 바인딩한다.
     auto env = std::make_shared<Environment>(closure);
-    const auto& params = declaration.getParams();
-    for (std::size_t i = 0; i < params.size(); ++i)
-        env->define(params[i].getLexme(), arguments[i]);
+    const auto& params_vector = declaration.getParams();
+    for (std::size_t i = 0; i < params_vector.size(); ++i)
+        env->define(params_vector[i].getLexme(), arguments[i]);
 
     try {
         interpreter.executeBlock(declaration.getBody(), env);

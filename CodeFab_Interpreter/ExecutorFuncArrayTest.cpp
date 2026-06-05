@@ -36,9 +36,9 @@ namespace {
         return std::make_unique<ReturnStmt>(returnTok(), std::move(value));
     }
     StmtPtr funcStmt(const std::string& name, std::vector<std::string> params, std::vector<StmtPtr> body) {
-        std::vector<Token> ps;
-        for (auto& p : params) ps.push_back(idTok(p));
-        return std::make_unique<FuncStmt>(idTok(name), std::move(ps), std::move(body));
+        std::vector<Token> param_tokens_vector;
+        for (auto& p : params) param_tokens_vector.push_back(idTok(p));
+        return std::make_unique<FuncStmt>(idTok(name), std::move(param_tokens_vector), std::move(body));
     }
 
     std::string run(std::vector<StmtPtr> program) {

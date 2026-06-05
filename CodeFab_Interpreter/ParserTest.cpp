@@ -1160,6 +1160,110 @@ TEST(ParserTest, FuncWithParamsAndCall) {
     }
 }
 
+TEST(ParserTest, ArrayCreationAndRead) {
+    std::vector<Token> tokens = {
+        // var arr = Array(3);
+        Token(TokenType::VAR,         "var",   nullptr, 1),
+        Token(TokenType::IDENTIFIER,  "arr",   nullptr, 1),
+        Token(TokenType::EQUAL,       "=",     nullptr, 1),
+        Token(TokenType::ARRAY,       "Array", nullptr, 1),
+        Token(TokenType::LEFT_PAREN,  "(",     nullptr, 1),
+        Token(TokenType::NUMBER,      "3",     3.0,     1),
+        Token(TokenType::RIGHT_PAREN, ")",     nullptr, 1),
+        Token(TokenType::SEMICOLON,   ";",     nullptr, 1),
+        Token(TokenType::EOF_TOKEN,   "",      nullptr, 1),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 1u);
+
+    MockStmtVisitor mock;
+    EXPECT_CALL(mock, visitVarStmt(testing::_))
+        .WillOnce([](VarStmt& stmt) {
+        EXPECT_EQ(stmt.getName().getLexme(), "arr");
+
+        auto* call = dynamic_cast<CallExpr*>(stmt.getInitializer().get());
+        ASSERT_NE(call, nullptr);
+
+        auto* callee = dynamic_cast<VariableExpr*>(call->getCallee().get());
+        ASSERT_NE(callee, nullptr);
+        EXPECT_EQ(callee->getName().getLexme(), "Array");
+
+        ASSERT_EQ(call->getArguments().size(), 1u);
+        auto* size = dynamic_cast<LiteralExpr*>(call->getArguments()[0].get());
+        ASSERT_NE(size, nullptr);
+        EXPECT_DOUBLE_EQ(std::get<double>(size->getValue()), 3.0);
+        });
+
+    stmts[0]->accept(mock);
+}
+
+TEST(ParserTest, ArrayIndexAssignment) {
+    std::vector<Token> tokens = {
+        // var arr = Array(3);
+        Token(TokenType::VAR,          "var",   nullptr, 1),
+        Token(TokenType::IDENTIFIER,   "arr",   nullptr, 1),
+        Token(TokenType::EQUAL,        "=",     nullptr, 1),
+        Token(TokenType::ARRAY,        "Array", nullptr, 1),
+        Token(TokenType::LEFT_PAREN,   "(",     nullptr, 1),
+        Token(TokenType::NUMBER,       "3",     3.0,     1),
+        Token(TokenType::RIGHT_PAREN,  ")",     nullptr, 1),
+        Token(TokenType::SEMICOLON,    ";",     nullptr, 1),
+        // arr[1] = 5;
+        Token(TokenType::IDENTIFIER,   "arr",   nullptr, 2),
+        Token(TokenType::LEFT_BRACKET, "[",     nullptr, 2),
+        Token(TokenType::NUMBER,       "1",     1.0,     2),
+        Token(TokenType::RIGHT_BRACKET,"]",     nullptr, 2),
+        Token(TokenType::EQUAL,        "=",     nullptr, 2),
+        Token(TokenType::NUMBER,       "5",     5.0,     2),
+        Token(TokenType::SEMICOLON,    ";",     nullptr, 2),
+        Token(TokenType::EOF_TOKEN,    "",      nullptr, 2),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 2u);
+
+    // var arr = Array(3);
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "arr");
+            auto* call = dynamic_cast<CallExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(call, nullptr);
+            EXPECT_EQ(dynamic_cast<VariableExpr*>(call->getCallee().get())->getName().getLexme(), "Array");
+            });
+        stmts[0]->accept(mock);
+    }
+
+    // arr[1] = 5;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitExprStmt(testing::_))
+            .WillOnce([](ExprStmt& stmt) {
+            auto* set = dynamic_cast<ArrIndexSetExpr*>(stmt.getExpression().get());
+            ASSERT_NE(set, nullptr);
+
+            auto* obj = dynamic_cast<VariableExpr*>(set->getObject().get());
+            ASSERT_NE(obj, nullptr);
+            EXPECT_EQ(obj->getName().getLexme(), "arr");
+
+            auto* idx = dynamic_cast<LiteralExpr*>(set->getIndex().get());
+            ASSERT_NE(idx, nullptr);
+            EXPECT_DOUBLE_EQ(std::get<double>(idx->getValue()), 1.0);
+
+            auto* val = dynamic_cast<LiteralExpr*>(set->getValue().get());
+            ASSERT_NE(val, nullptr);
+            EXPECT_DOUBLE_EQ(std::get<double>(val->getValue()), 5.0);
+            });
+        stmts[1]->accept(mock);
+    }
+}
+
 TEST(ParserTest, GroupingExpr) {
     std::vector<Token> tokens = {
         // print (1 + 2) * 3;

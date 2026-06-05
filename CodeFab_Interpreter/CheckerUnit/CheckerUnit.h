@@ -22,6 +22,7 @@ private:
 	void checkBlock(const std::vector<StmtPtr>& statements_tree_vector);
 	void checkStatement(Stmt& statements_node);
 	void checkExpression(ExprPtr& p_expression);
+	void checkParams(FuncStmt& stmt);
 	void addBeginBlockScope();
 	void addEndBlockScope();
 	void declareValue(const Token& name);
@@ -51,11 +52,12 @@ private:
 	void visitBlockStmt(BlockStmt& stmt) override;
 	void visitIfStmt(IfStmt& stmt) override;
 	void visitForStmt(ForStmt& stmt) override;
-	void visitFuncStmt(FuncStmt& stmt) override {};
-	void visitReturnStmt(ReturnStmt& stmt) override {};
+	void visitFuncStmt(FuncStmt& stmt) override;
+	void visitReturnStmt(ReturnStmt& stmt) override;
 
 #pragma endregion
 
 private:
 	vector<unordered_map<string, bool>> check_values_in_scopes_vector;
+	bool is_in_function = false;
 };

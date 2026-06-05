@@ -21,6 +21,16 @@ void CheckerUnit::checkExpression(ExprPtr& p_expression) {
 	p_expression->accept(*this);
 }
 
+void CheckerUnit::checkParams(FuncStmt& stmt) {
+	for (const auto& param : stmt.getParams()) {
+		if (check_values_in_scopes_vector.back().count(param.getLexme()))
+			throw CheckerError("[line " + std::to_string(param.getLine()) +
+				"] Checker Error: Duplicate parameter name '" + param.getLexme() + "'.");
+		declareValue(param);
+		defineValue(param);
+	}
+}
+
 void CheckerUnit::addBeginBlockScope() {
 	check_values_in_scopes_vector.push_back({});
 }
@@ -152,6 +162,25 @@ void CheckerUnit::visitForStmt(ForStmt& stmt) {
 	checkStatement(*stmt.getBody());
 
 	addEndBlockScope();
+}
+
+void CheckerUnit::visitFuncStmt(FuncStmt& stmt) {
+	declareValue(stmt.getName());
+	defineValue(stmt.getName());
+	bool backup_flag = is_in_function;
+	is_in_function = true;
+	addBeginBlockScope();
+	checkParams(stmt);
+	checkBlock(stmt.getBody());
+	addEndBlockScope();
+	is_in_function = backup_flag;
+}
+
+void CheckerUnit::visitReturnStmt(ReturnStmt& stmt) {
+	if (!is_in_function)
+		throw CheckerError("[line " + std::to_string(stmt.getKeyword().getLine()) +
+			"] Checker Error: Can't return from top-level code.");
+	checkExpression(stmt.getValue());  // null guard 내부 처리
 }
 
 #pragma endregion

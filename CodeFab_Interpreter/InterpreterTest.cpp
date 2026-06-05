@@ -82,3 +82,35 @@ TEST(InterpreterExprTest, PlusMixedTypesThrows) {
 TEST(InterpreterExprTest, UnaryMinusOnNonNumberThrows) {
     EXPECT_THROW(runExpr(unary(TokenType::MINUS, "-", litStr("a"))), RuntimeError);
 }
+
+// and / or / !
+TEST(InterpreterExprTest, LogicalAnd) {
+    EXPECT_EQ(runExpr(binary(litBool(true),  TokenType::AND_OP, "and", litBool(true))),  "true\n");
+    EXPECT_EQ(runExpr(binary(litBool(true),  TokenType::AND_OP, "and", litBool(false))), "false\n");
+    EXPECT_EQ(runExpr(binary(litBool(false), TokenType::AND_OP, "and", litBool(true))),  "false\n");
+}
+
+TEST(InterpreterExprTest, LogicalOr) {
+    EXPECT_EQ(runExpr(binary(litBool(false), TokenType::OR_OP, "or", litBool(false))), "false\n");
+    EXPECT_EQ(runExpr(binary(litBool(false), TokenType::OR_OP, "or", litBool(true))),  "true\n");
+    EXPECT_EQ(runExpr(binary(litBool(true),  TokenType::OR_OP, "or", litBool(false))), "true\n");
+}
+
+TEST(InterpreterExprTest, LogicalShortCircuitSkipsRightOperand) {
+    // false and (1 / 0) → 우변을 평가하지 않으므로 오류 없이 false
+    ExprPtr andExpr = binary(litBool(false), TokenType::AND_OP, "and",
+                             binary(litNum(1.0), TokenType::SLASH, "/", litNum(0.0)));
+    EXPECT_EQ(runExpr(std::move(andExpr)), "false\n");
+
+    // true or (1 / 0) → 우변을 평가하지 않으므로 오류 없이 true
+    ExprPtr orExpr = binary(litBool(true), TokenType::OR_OP, "or",
+                            binary(litNum(1.0), TokenType::SLASH, "/", litNum(0.0)));
+    EXPECT_EQ(runExpr(std::move(orExpr)), "true\n");
+}
+
+TEST(InterpreterExprTest, BangNegatesTruthiness) {
+    EXPECT_EQ(runExpr(unary(TokenType::BANG, "!", litBool(true))),  "false\n");
+    EXPECT_EQ(runExpr(unary(TokenType::BANG, "!", litBool(false))), "true\n");
+    EXPECT_EQ(runExpr(unary(TokenType::BANG, "!", litNil())),       "true\n");   // nil → 거짓 → !false
+    EXPECT_EQ(runExpr(unary(TokenType::BANG, "!", litNum(5.0))),    "false\n");  // 숫자 → 참
+}

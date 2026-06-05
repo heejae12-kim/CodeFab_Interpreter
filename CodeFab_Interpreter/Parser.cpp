@@ -207,7 +207,7 @@ ExprPtr Parser::primary() {
 		return std::make_unique<VariableExpr>(std::move(tok));
 	}
 	if (match({ TokenType::LEFT_PAREN })) {
-			ExprPtr expr = expression();
+		ExprPtr expr = expression();
 		consume(TokenType::RIGHT_PAREN, "Expected ')' after expression.");
 		return std::make_unique<GroupingExpr>(std::move(expr));
 	}

@@ -830,6 +830,65 @@ TEST(ParserTest, UnaryBangVariable) {
     }
 }
 
+TEST(ParserTest, BinaryMinusWithVariable) {
+    std::vector<Token> tokens = {
+        // var a = 3;
+        Token(TokenType::VAR,        "var", nullptr, 1),
+        Token(TokenType::IDENTIFIER, "a",   nullptr, 1),
+        Token(TokenType::EQUAL,      "=",   nullptr, 1),
+        Token(TokenType::NUMBER,     "3",   3.0,     1),
+        Token(TokenType::SEMICOLON,  ";",   nullptr, 1),
+        // var b = 3 - a;
+        Token(TokenType::VAR,        "var", nullptr, 2),
+        Token(TokenType::IDENTIFIER, "b",   nullptr, 2),
+        Token(TokenType::EQUAL,      "=",   nullptr, 2),
+        Token(TokenType::NUMBER,     "3",   3.0,     2),
+        Token(TokenType::MINUS,      "-",   nullptr, 2),
+        Token(TokenType::IDENTIFIER, "a",   nullptr, 2),
+        Token(TokenType::SEMICOLON,  ";",   nullptr, 2),
+        Token(TokenType::EOF_TOKEN,  "",    nullptr, 2),
+    };
+
+    Parser parser(tokens);
+    auto stmts = parser.parse();
+
+    ASSERT_EQ(stmts.size(), 2u);
+
+    // var a = 3;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "a");
+            auto* lit = dynamic_cast<LiteralExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(lit, nullptr);
+            EXPECT_DOUBLE_EQ(std::get<double>(lit->getValue()), 3.0);
+            });
+        stmts[0]->accept(mock);
+    }
+
+    // var b = 3 - a;
+    {
+        MockStmtVisitor mock;
+        EXPECT_CALL(mock, visitVarStmt(testing::_))
+            .WillOnce([](VarStmt& stmt) {
+            EXPECT_EQ(stmt.getName().getLexme(), "b");
+            auto* bin = dynamic_cast<BinaryExpr*>(stmt.getInitializer().get());
+            ASSERT_NE(bin, nullptr);
+            EXPECT_EQ(bin->getOp().getTokenType(), TokenType::MINUS);
+
+            auto* left = dynamic_cast<LiteralExpr*>(bin->getLeft().get());
+            ASSERT_NE(left, nullptr);
+            EXPECT_DOUBLE_EQ(std::get<double>(left->getValue()), 3.0);
+
+            auto* right = dynamic_cast<VariableExpr*>(bin->getRight().get());
+            ASSERT_NE(right, nullptr);
+            EXPECT_EQ(right->getName().getLexme(), "a");
+            });
+        stmts[1]->accept(mock);
+    }
+}
+
 TEST(ParserTest, UnaryMinus) {
     std::vector<Token> tokens = {
         // var a = -3;

@@ -25,10 +25,7 @@ StmtPtr Parser::funcDeclaration() {
 	}
 	consume(TokenType::RIGHT_PAREN, "Expected ')' after parameters.");
 	consume(TokenType::LEFT_BRACE, "Expected '{' before function body.");
-	std::vector<StmtPtr> body_vector;
-	while (!check(TokenType::RIGHT_BRACE) && !isAtEnd())
-		body_vector.push_back(declaration());
-	consume(TokenType::RIGHT_BRACE, "Expected '}' after function body.");
+	std::vector<StmtPtr> body_vector = parseBlock("Expected '}' after function body.");
 	return std::make_unique<FuncStmt>(std::move(name), std::move(params_vector), std::move(body_vector));
 }
 
@@ -88,20 +85,24 @@ StmtPtr Parser::forStatement() {
 	return std::make_unique<ForStmt>(std::move(p_init), std::move(p_cond), std::move(p_incr), std::move(p_body));
 }
 
+StmtPtr Parser::blockStatement() {
+	return std::make_unique<BlockStmt>(parseBlock());
+}
+
+std::vector<StmtPtr> Parser::parseBlock(const std::string& closingMsg) {
+	std::vector<StmtPtr> stmts_vector;
+	while (!check(TokenType::RIGHT_BRACE) && !isAtEnd())
+		stmts_vector.push_back(declaration());
+	consume(TokenType::RIGHT_BRACE, closingMsg);
+	return stmts_vector;
+}
+
 StmtPtr Parser::returnStatement() {
 	Token keyword = previous();
 	ExprPtr p_value;
 	if (!check(TokenType::SEMICOLON)) p_value = expression();
 	consume(TokenType::SEMICOLON, "Expected ';' after return value.");
 	return std::make_unique<ReturnStmt>(std::move(keyword), std::move(p_value));
-}
-
-StmtPtr Parser::blockStatement() {
-	std::vector<StmtPtr> stmts_vector;
-	while (!check(TokenType::RIGHT_BRACE) && !isAtEnd())
-		stmts_vector.push_back(declaration());
-	consume(TokenType::RIGHT_BRACE, "Expected '}' after block.");
-	return std::make_unique<BlockStmt>(std::move(stmts_vector));
 }
 
 StmtPtr Parser::expressionStatement() {
@@ -171,7 +172,7 @@ ExprPtr Parser::postfix() {
 			p_expr = finishCall(std::move(p_expr));
 		} else if (match({ TokenType::LEFT_BRACKET })) {
 			Token   bracket = previous();
-			ExprPtr p_index   = expression();
+			ExprPtr p_index = expression();
 			consume(TokenType::RIGHT_BRACKET, "Expected ']' after index.");
 			p_expr = std::make_unique<ArrIndexGetExpr>(std::move(p_expr), std::move(p_index), std::move(bracket));
 		} else {
@@ -211,7 +212,24 @@ ExprPtr Parser::primary() {
 		consume(TokenType::RIGHT_PAREN, "Expected ')' after expression.");
 		return std::make_unique<GroupingExpr>(std::move(p_expr));
 	}
-	throw ParseError("[line " + std::to_string(peek().getLine()) + "] Syntax Error at '" + peek().getLexme() + "': Expected expression.");
+	throw ParseError(makeError("Expected expression."));
+}
+
+std::string Parser::makeError(const std::string& msg) const {
+	return "[line " + std::to_string(peek().getLine())
+		+ "] Syntax Error at '" + peek().getLexme() + "': " + msg;
+}
+
+Token Parser::consume(TokenType type, const std::string& msg) {
+	if (check(type)) return advance();
+	throw ParseError(makeError(msg));
+}
+
+bool Parser::match(std::vector<TokenType> types) {
+	for (auto type : types) {
+		if (check(type)) { advance(); return true; }
+	}
+	return false;
 }
 
 bool Parser::check(TokenType t) const {
@@ -232,17 +250,5 @@ const Token& Parser::peek() const {
 }
 
 Token& Parser::previous() {
-	return tokens_[current -1];
-}
-
-bool Parser::match(std::vector<TokenType> types) {
-	for (auto type : types) {
-		if (check(type)) { advance(); return true; }
-	}
-	return false;
-}
-
-Token Parser::consume(TokenType type, const std::string& msg) {
-	if (check(type)) return advance();
-	throw ParseError("[line " + std::to_string(peek().getLine()) + "] Syntax Error at '" + peek().getLexme() + "': " + msg);
+	return tokens_[current - 1];
 }

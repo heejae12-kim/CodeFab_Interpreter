@@ -24,6 +24,7 @@ enum class TokenType {
     VAR, IF, ELSE, FOR, PRINT,
     TRUE_KW, FALSE_KW,
     FUNC, RETURN,
+    ARRAY,
 
     // Boolean Operator
     AND_OP, OR_OP, BANG,

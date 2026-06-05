@@ -114,6 +114,7 @@ ExprPtr Parser::assignment() {
         ExprPtr val = assignment();
         if (auto* var = dynamic_cast<VariableExpr*>(expr.get()))
             return std::make_unique<AssignExpr>(var->getName(), std::move(val));
+        throw ParseError("[line " + std::to_string(previous().getLine()) + "] Invalid assignment target.");
     }
     return expr;
 }

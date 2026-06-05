@@ -12,6 +12,7 @@ static const std::unordered_map<std::string, TokenType> keywords = {
     {"false",  TokenType::FALSE_KW},
     {"Func",   TokenType::FUNC},   // 함수 선언 키워드 (PDF 원문 기준 대문자 F)
     {"return", TokenType::RETURN}, // 반환문 키워드
+    {"Array",  TokenType::ARRAY},  // 배열 생성 키워드 (PDF 원문 기준 대문자 A)
     {"and",    TokenType::AND_OP}, // 논리 AND 연산자
     {"or",     TokenType::OR_OP},  // 논리 OR 연산자
 };

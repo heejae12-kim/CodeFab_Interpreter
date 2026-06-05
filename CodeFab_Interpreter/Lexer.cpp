@@ -3,13 +3,15 @@
 #include <unordered_map>
 
 static const std::unordered_map<std::string, TokenType> keywords = {
-    {"var",   TokenType::VAR},
-    {"if",    TokenType::IF},
-    {"else",  TokenType::ELSE},
-    {"for",   TokenType::FOR},
-    {"print", TokenType::PRINT},
-    {"true",  TokenType::TRUE_KW},
-    {"false", TokenType::FALSE_KW},
+    {"var",    TokenType::VAR},
+    {"if",     TokenType::IF},
+    {"else",   TokenType::ELSE},
+    {"for",    TokenType::FOR},
+    {"print",  TokenType::PRINT},
+    {"true",   TokenType::TRUE_KW},
+    {"false",  TokenType::FALSE_KW},
+    {"Func",   TokenType::FUNC},   // 함수 선언 키워드 (PDF 원문 기준 대문자 F)
+    {"return", TokenType::RETURN}, // 반환문 키워드
 };
 
 Lexer::Lexer(std::string source) : source_(std::move(source)) {}
@@ -54,6 +56,7 @@ void Lexer::scanToken() {
     case '{': addToken(TokenType::LEFT_BRACE);  break;
     case '}': addToken(TokenType::RIGHT_BRACE); break;
     case ';': addToken(TokenType::SEMICOLON);   break;
+    case ',': addToken(TokenType::COMMA);       break;
     case '+': addToken(TokenType::PLUS);        break;
     case '-': addToken(TokenType::MINUS);       break;
     case '*': addToken(TokenType::STAR);        break;

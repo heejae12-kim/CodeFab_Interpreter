@@ -177,3 +177,19 @@ TEST(ParserErrorTest, ForVarInitUnexpectedRightBrace) {
     Parser parser(tokens);
     EXPECT_THROW(parser.parse(), ParseError);
 }
+
+// add(x) = 5; → 함수 호출 결과에 대입 시도
+TEST(ParserErrorTest, InvalidAssignmentTarget) {
+    std::vector<Token> tokens = {
+        Token(TokenType::IDENTIFIER, "add", nullptr, 1),
+        Token(TokenType::LEFT_PAREN, "(",   nullptr, 1),
+        Token(TokenType::IDENTIFIER, "x",   nullptr, 1),
+        Token(TokenType::RIGHT_PAREN,")",   nullptr, 1),
+        Token(TokenType::EQUAL,      "=",   nullptr, 1),
+        Token(TokenType::NUMBER,     "5",   5.0,     1),
+        Token(TokenType::SEMICOLON,  ";",   nullptr, 1),
+        Token(TokenType::EOF_TOKEN,  "",    nullptr, 1),
+    };
+    Parser parser(tokens);
+    EXPECT_THROW(parser.parse(), ParseError);
+}

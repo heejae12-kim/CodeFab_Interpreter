@@ -86,8 +86,11 @@ public:
 
     const Token& getName() const { return name; }
 
+    int          getDistance() const { return distance; }
+    void         setDistance(int d) { distance = d; }
 private:
     Token name;
+    int   distance = -1;
 };
 
 class AssignExpr : public Expr {
@@ -97,8 +100,11 @@ public:
 
     const Token& getName()  const { return name; }
     ExprPtr& getValue() { return value; }
+    int          getDistance() const { return distance; }
+    void         setDistance(int d) { distance = d; }
 
 private:
     Token   name;
     ExprPtr value;
+    int     distance = -1;
 };

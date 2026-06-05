@@ -159,6 +159,7 @@
     <ClCompile Include="Environment.cpp" />
     <ClCompile Include="EnvironmentTest.cpp" />
     <ClCompile Include="Interpreter.cpp" />
+    <ClCompile Include="Callable.cpp" />
     <ClCompile Include="InterpreterTest.cpp" />
     <ClCompile Include="InterpreterStmtTest.cpp" />
     <ClCompile Include="ExecutorFuncArrayTest.cpp" />
@@ -176,6 +177,7 @@
     <ClInclude Include="Token.h" />
     <ClInclude Include="Environment.h" />
     <ClInclude Include="Interpreter.h" />
+    <ClInclude Include="Callable.h" />
     <ClInclude Include="TestHelpers.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

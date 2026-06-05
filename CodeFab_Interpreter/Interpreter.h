@@ -3,8 +3,6 @@
 #include "Environment.h"
 #include <memory>
 #include <vector>
-#include <string>
-#include <unordered_map>
 
 // Stmt/Expr를 DFS 실행한다.
 //   - Expr : 값을 평가하여 ValuableValue 반환
@@ -18,11 +16,6 @@ public:
 private:
     std::shared_ptr<Environment> globalEnv;
     std::shared_ptr<Environment> currentEnv;
-
-    // [B안] 함수는 값이 아니라 인터프리터가 중앙에서 관리하는 함수표에 보관한다.
-    std::unordered_map<std::string, FuncStmt*> functions_;
-    ValuableValue callFunction(FuncStmt& fn, std::vector<ValuableValue>& args, const Token& paren);
-    ValuableValue makeArray(std::vector<ValuableValue>& args, const Token& paren);
 
     ValuableValue evaluate(Expr& expr);
     void          execute(Stmt& stmt);

@@ -6,50 +6,50 @@
 
 class ParseError : public std::runtime_error {
 public:
-	explicit ParseError(const std::string& msg) : std::runtime_error(msg) {}
+    explicit ParseError(const std::string& msg) : std::runtime_error(msg) {}
 };
 
 class Parser {
 public:
-	explicit Parser(std::vector<Token> tokens);
-	std::vector<StmtPtr> parse();
+    explicit Parser(std::vector<Token> tokens);
+    std::vector<StmtPtr> parse();
 
 private:
-	std::vector<Token> tokens_;
-	int current = 0;
+    std::vector<Token> tokens_;
+    int current = 0;
 
-	StmtPtr declaration();
-	StmtPtr varDeclaration();
-	StmtPtr funcDeclaration();
-	StmtPtr statement();
-	StmtPtr expressionStatement();
-	StmtPtr printStatement();
-	StmtPtr ifStatement();
-	StmtPtr forStatement();
-	StmtPtr blockStatement();
-	StmtPtr returnStatement();
+    StmtPtr declaration();
+    StmtPtr varDeclaration();
+    StmtPtr funcDeclaration();
+    StmtPtr statement();
+    StmtPtr expressionStatement();
+    StmtPtr printStatement();
+    StmtPtr ifStatement();
+    StmtPtr forStatement();
+    StmtPtr blockStatement();
+    StmtPtr returnStatement();
 
-	ExprPtr              parseBinary(std::function<ExprPtr()> next, std::vector<TokenType> ops);
-	std::vector<StmtPtr> parseBlock(const std::string& closingMsg = "Expected '}' after block.");
-	std::string          makeError(const std::string& msg) const;
+    ExprPtr              parseBinary(std::function<ExprPtr()> next, std::vector<TokenType> ops);
+    std::vector<StmtPtr> parseBlock(const std::string& closingMsg = "Expected '}' after block.");
+    std::string          makeError(const std::string& msg) const;
 
-	ExprPtr expression();
-	ExprPtr assignment();
-	ExprPtr logicalOr();
-	ExprPtr logicalAnd();
-	ExprPtr comparison();
-	ExprPtr addition();
-	ExprPtr multiplication();
-	ExprPtr unary();
-	ExprPtr postfix();
-	ExprPtr finishCall(ExprPtr callee);
-	ExprPtr primary();
+    ExprPtr expression();
+    ExprPtr assignment();
+    ExprPtr logicalOr();
+    ExprPtr logicalAnd();
+    ExprPtr comparison();
+    ExprPtr addition();
+    ExprPtr multiplication();
+    ExprPtr unary();
+    ExprPtr postfix();
+    ExprPtr finishCall(ExprPtr callee);
+    ExprPtr primary();
 
-	bool         match(std::vector<TokenType> types);
-	bool         check(TokenType type) const;
-	bool         isAtEnd() const;
-	const Token& peek() const;
-	Token&       advance();
-	Token&       previous();
-	Token        consume(TokenType type, const std::string& msg);
+    bool         match(std::vector<TokenType> types);
+    bool         check(TokenType type) const;
+    bool         isAtEnd() const;
+    const Token& peek() const;
+    Token&       advance();
+    Token&       previous();
+    Token        consume(TokenType type, const std::string& msg);
 };

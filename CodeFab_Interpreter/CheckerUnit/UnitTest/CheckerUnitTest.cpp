@@ -41,6 +41,7 @@ protected:
 protected:
 	CheckerUnit* p_checker_unit = nullptr;
 	vector<StmtPtr> statement_vector = {};
+	std::vector<StmtPtr> statement_body_vector = {};
 };
 
 TEST_F(CheckerUnitFixture, EmptyProgram) {
@@ -187,8 +188,7 @@ TEST_F(CheckerUnitFixture, IfStmtBinaryExpressiongInCondition) {
 
 TEST_F(CheckerUnitFixture, ForStmtFullLoop) {
 	// for (var i = 0; i < 3; i = i + 1) { print i; }
-	std::vector<StmtPtr> body;
-	body.push_back(std::make_unique<PrintStmt>(
+	statement_body_vector.push_back(std::make_unique<PrintStmt>(
 		std::make_unique<VariableExpr>(makeIndentifier("i"))
 	));
 
@@ -207,7 +207,7 @@ TEST_F(CheckerUnitFixture, ForStmtFullLoop) {
 				numLiteral(1.0)
 			)
 		),
-		makeBlockStatement(std::move(body))
+		makeBlockStatement(std::move(statement_body_vector))
 	));
 
 	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
@@ -309,15 +309,14 @@ TEST_F(CheckerUnitFixture, FuncDuplicateParamThrows) {
 
 TEST_F(CheckerUnitFixture, FuncBodyCanAccessParams) {
 	// func foo(x) { print x; }
-	std::vector<StmtPtr> body;
-	body.push_back(std::make_unique<PrintStmt>(
+	statement_body_vector.push_back(std::make_unique<PrintStmt>(
 		std::make_unique<VariableExpr>(makeIndentifier("x"))
 	));
 
 	statement_vector.push_back(std::make_unique<FuncStmt>(
 		makeIndentifier("foo"),
 		std::vector<Token>{ makeIndentifier("x") },
-		std::move(body)
+		std::move(statement_body_vector)
 	));
 
 	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
@@ -325,8 +324,7 @@ TEST_F(CheckerUnitFixture, FuncBodyCanAccessParams) {
 
 TEST_F(CheckerUnitFixture, ReturnInsideFunction) {
 	// func foo() { return 1; }
-	std::vector<StmtPtr> body;
-	body.push_back(std::make_unique<ReturnStmt>(
+	statement_body_vector.push_back(std::make_unique<ReturnStmt>(
 		Token(TokenType::IDENTIFIER, "return", nullptr, 1),
 		numLiteral(1.0)
 	));
@@ -334,7 +332,7 @@ TEST_F(CheckerUnitFixture, ReturnInsideFunction) {
 	statement_vector.push_back(std::make_unique<FuncStmt>(
 		makeIndentifier("foo"),
 		std::vector<Token>{},
-		std::move(body)
+		std::move(statement_body_vector)
 	));
 
 	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));
@@ -358,8 +356,7 @@ TEST_F(CheckerUnitFixture, ReturnAtTopLevelThrows) {
 
 TEST_F(CheckerUnitFixture, ReturnWithoutValue) {
 	// func foo() { return; }
-	std::vector<StmtPtr> body;
-	body.push_back(std::make_unique<ReturnStmt>(
+	statement_body_vector.push_back(std::make_unique<ReturnStmt>(
 		Token(TokenType::IDENTIFIER, "return", nullptr, 1),
 		nullptr
 	));
@@ -367,7 +364,7 @@ TEST_F(CheckerUnitFixture, ReturnWithoutValue) {
 	statement_vector.push_back(std::make_unique<FuncStmt>(
 		makeIndentifier("foo"),
 		std::vector<Token>{},
-		std::move(body)
+		std::move(statement_body_vector)
 	));
 
 	EXPECT_NO_THROW(p_checker_unit->doChecker(statement_vector));

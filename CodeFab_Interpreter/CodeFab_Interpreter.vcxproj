@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Lexer.cpp" />
+    <ClCompile Include="CheckerUnit\CheckEvalOperation.cpp" />
     <ClCompile Include="CheckerUnit\CheckerUnit.cpp" />
     <ClCompile Include="CheckerUnit\UnitTest\CheckerUnitTest.cpp">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> %(AdditionalOptions)</AdditionalOptions>
@@ -168,6 +169,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CheckerUnit\CheckEvalOperation.h" />
     <ClInclude Include="CheckerUnit\CheckerError.h" />
     <ClInclude Include="CheckerUnit\CheckerUnit.h" />
     <ClInclude Include="Expr.h" />

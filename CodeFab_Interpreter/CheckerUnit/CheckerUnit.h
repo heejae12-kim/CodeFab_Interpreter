@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "./CheckerError.h"
+#include "./CheckEvalOperation.h"
 #include "../Stmt.h"
 
 #define USE_DISTANCE_OPTIMIZE
@@ -30,11 +31,6 @@ private:
 	void defineValue(const Token& name);
 
 	void updateValueDistance(Expr& expr, const Token& name);
-
-	std::optional<ValuableValue> evaluateBinaryCalc(
-		const Token& op, const ValuableValue& l_value, const ValuableValue& r_value);
-	std::optional<ValuableValue> evaluateUnaryCalc(
-		const Token& op, const ValuableValue& value);
 
 #pragma region ExprVisitor
 

@@ -1,0 +1,25 @@
+var a = 10;
+var b = 3;
+
+print a + b;        // 13
+print a - b;        // 7
+print a * b;        // 30
+print a / b;        // 3.33333...
+
+var hello = "Hello";
+var world = "World";
+print hello + ", " + world + "!";  // Hello, World!
+
+var t = true;
+var f = false;
+
+print t;            // true
+print f;            // false
+print t and f;      // false
+print t or f;       // true
+print !t;           // false
+
+print 5 > 3;        // true
+print 5 == 5;       // true
+print 5 != 3;       // true
+print 2 <= 2;       // true

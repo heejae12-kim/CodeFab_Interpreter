@@ -1,0 +1,45 @@
+var arr = Array(5);
+arr[0] = 10;
+arr[1] = 20;
+arr[2] = 30;
+arr[3] = 40;
+arr[4] = 50;
+
+for (var i = 0; i < 5; i = i + 1) {
+    print arr[i];
+}
+// 출력: 10 20 30 40 50
+
+var total = 0;
+for (var j = 0; j < 5; j = j + 1) {
+    total = total + arr[j];
+}
+print total;
+// 출력: 150
+
+Func sumArray(a, len) {
+    var s = 0;
+    for (var i = 0; i < len; i = i + 1) {
+        s = s + a[i];
+    }
+    return s;
+}
+
+var nums = Array(4);
+nums[0] = 1;
+nums[1] = 2;
+nums[2] = 3;
+nums[3] = 4;
+print sumArray(nums, 4);    // 10
+
+Func fillArray(a, len, val) {
+    for (var i = 0; i < len; i = i + 1) {
+        a[i] = val;
+    }
+}
+
+var filled = Array(3);
+fillArray(filled, 3, 7);
+print filled[0];    // 7
+print filled[1];    // 7
+print filled[2];    // 7

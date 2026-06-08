@@ -49,23 +49,26 @@ StmtPtr Parser::statement() {
 }
 
 StmtPtr Parser::printStatement() {
+	int line = previous().getLine();
 	ExprPtr p_value = expression();
 	consume(TokenType::SEMICOLON, "Expected ';' after value.");
 
-	return std::make_unique<PrintStmt>(std::move(p_value));
+	return std::make_unique<PrintStmt>(std::move(p_value), line);
 }
 
 StmtPtr Parser::ifStatement() {
+	int line = previous().getLine();
 	consume(TokenType::LEFT_PAREN, "Expected '(' after 'if'.");
 	ExprPtr p_cond = comparison();
 	consume(TokenType::RIGHT_PAREN, "Expected ')' after if condition.");
 	StmtPtr p_thenBranch = statement();
 	StmtPtr p_elseBranch;
 	if (match({ TokenType::ELSE })) p_elseBranch = statement();
-	return std::make_unique<IfStmt>(std::move(p_cond), std::move(p_thenBranch), std::move(p_elseBranch));
+	return std::make_unique<IfStmt>(std::move(p_cond), std::move(p_thenBranch), std::move(p_elseBranch), line);
 }
 
 StmtPtr Parser::forStatement() {
+	int line = previous().getLine();
 	consume(TokenType::LEFT_PAREN, "Expected '(' after 'for'.");
 
 	StmtPtr p_init;
@@ -82,11 +85,12 @@ StmtPtr Parser::forStatement() {
 	consume(TokenType::RIGHT_PAREN, "Expected ')' after for clauses.");
 
 	StmtPtr p_body = statement();
-	return std::make_unique<ForStmt>(std::move(p_init), std::move(p_cond), std::move(p_incr), std::move(p_body));
+	return std::make_unique<ForStmt>(std::move(p_init), std::move(p_cond), std::move(p_incr), std::move(p_body), line);
 }
 
 StmtPtr Parser::blockStatement() {
-	return std::make_unique<BlockStmt>(parseBlock());
+	int line = previous().getLine();
+	return std::make_unique<BlockStmt>(parseBlock(), line);
 }
 
 std::vector<StmtPtr> Parser::parseBlock(const std::string& closingMsg) {
@@ -106,9 +110,10 @@ StmtPtr Parser::returnStatement() {
 }
 
 StmtPtr Parser::expressionStatement() {
+	int line = peek().getLine();
 	ExprPtr p_expr = expression();
 	consume(TokenType::SEMICOLON, "Expected ';' after expression.");
-	return std::make_unique<ExprStmt>(std::move(p_expr));
+	return std::make_unique<ExprStmt>(std::move(p_expr), line);
 }
 
 ExprPtr Parser::expression() {

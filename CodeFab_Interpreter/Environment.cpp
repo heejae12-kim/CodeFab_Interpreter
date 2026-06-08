@@ -15,10 +15,10 @@ ValuableValue Environment::get(const Token& name) const {
     throw RuntimeError(name, "Undefined variable '" + name.getLexme() + "'.");
 }
 
-std::optional<ValuableValue> Environment::tryGet(const std::string& name) const {
+std::optional<ValuableValue> Environment::tryGetValue(const std::string& name) const {
     auto found = values.find(name);
     if (found != values.end()) return found->second;
-    if (enclosing) return enclosing->tryGet(name);
+    if (enclosing) return enclosing->tryGetValue(name);
     return std::nullopt;
 }
 

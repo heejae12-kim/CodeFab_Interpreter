@@ -21,7 +21,7 @@ void Interpreter::setStmtHook(StmtHook hook) { stmtHook_ = std::move(hook); }
 void Interpreter::clearStmtHook()             { stmtHook_ = nullptr; }
 
 std::string Interpreter::getVarAsString(const std::string& name) {
-    auto result = currentEnv->tryGet(name);
+    auto result = currentEnv->tryGetValue(name);
     if (!result) return "<undefined>";
     return stringify(*result);
 }

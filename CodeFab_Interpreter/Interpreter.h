@@ -19,12 +19,15 @@ public:
     using StmtHook = std::function<void(Stmt&, int depth)>;
     void setStmtHook(StmtHook hook);
     void clearStmtHook();
+    // functionDepth: 함수 호출로 진입한 깊이 (loop/block만이면 0)
+    int  getFunctionDepth() const { return functionDepth_; }
 
 private:
     std::shared_ptr<Environment> globalEnv;
     std::shared_ptr<Environment> currentEnv;
     StmtHook stmtHook_;
     int      execDepth_     = 0;
+    int      functionDepth_ = 0;  // 함수 호출로만 증가 (loop/block 진입은 제외)
 
     ValuableValue evaluate(Expr& expr);
     void          execute(Stmt& stmt);

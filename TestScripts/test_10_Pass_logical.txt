@@ -1,0 +1,15 @@
+var t = true;
+var f = false;
+print t and t;
+print t and f;
+print f and t;
+print f and f;
+print t or t;
+print t or f;
+print f or t;
+print f or f;
+print !t;
+print !f;
+print t and !f;
+print !t or f;
+print !(t and f);

@@ -1,0 +1,13 @@
+print 42;
+print -7;
+print 3.14;
+print "Hello, World!";
+print "";
+print true;
+print false;
+var x = 100;
+print x;
+var msg = "test";
+print msg;
+print 1 + 2;
+print "Hello" + ", " + "World!";

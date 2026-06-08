@@ -1,0 +1,2 @@
+var str_a = "hello";
+var ret = -str_a;

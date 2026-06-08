@@ -1,0 +1,3 @@
+var arr = Array(3);
+arr[0] = 1;
+print arr["hello"];

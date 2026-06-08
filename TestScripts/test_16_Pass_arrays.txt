@@ -1,0 +1,26 @@
+var arr = Array(5);
+arr[0] = 10;
+arr[1] = 20;
+arr[2] = 30;
+arr[3] = 40;
+arr[4] = 50;
+print arr[0];
+print arr[2];
+print arr[4];
+print arr;
+
+var str_arr = Array(3);
+str_arr[0] = "hello";
+str_arr[1] = "world";
+str_arr[2] = "!";
+print str_arr[0];
+print str_arr;
+
+var sum = 0;
+for (var i = 0; i < 5; i = i + 1) {
+	sum = sum + arr[i];
+}
+print sum;
+
+arr[2] = arr[0] + arr[1];
+print arr[2];

@@ -1,0 +1,5 @@
+var num = 10;
+var str = "ten";
+if (num > str) {
+	print "greater";
+}

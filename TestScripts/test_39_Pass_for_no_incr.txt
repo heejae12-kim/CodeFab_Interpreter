@@ -1,0 +1,11 @@
+for (var i = 0; i < 5;) {
+	print i;
+	i = i + 1;
+}
+
+var product = 1;
+for (var k = 1; k <= 5;) {
+	product = product * k;
+	k = k + 1;
+}
+print product;

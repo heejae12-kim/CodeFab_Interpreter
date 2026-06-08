@@ -1,0 +1,39 @@
+Func sum_array(arr, size) {
+	var total = 0;
+	for (var i = 0; i < size; i = i + 1) {
+		total = total + arr[i];
+	}
+	return total;
+}
+
+Func fill_array(arr, size, value) {
+	for (var i = 0; i < size; i = i + 1) {
+		arr[i] = value;
+	}
+}
+
+var data = Array(5);
+fill_array(data, 5, 3);
+print sum_array(data, 5);
+
+Func is_even(n) {
+	var half = n / 2;
+	return half * 2 == n;
+}
+
+var evens = 0;
+for (var i = 0; i < 10; i = i + 1) {
+	if (is_even(i)) {
+		evens = evens + 1;
+	}
+}
+print evens;
+
+Func clamp(val, lo, hi) {
+	if (val < lo) { return lo; }
+	if (val > hi) { return hi; }
+	return val;
+}
+print clamp(-5, 0, 10);
+print clamp(5, 0, 10);
+print clamp(15, 0, 10);

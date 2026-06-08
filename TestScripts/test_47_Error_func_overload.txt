@@ -1,0 +1,9 @@
+Func add(a, b) {
+	return a + b;
+}
+
+Func add(a, b, c) {
+	return a + b + c;
+}
+
+print add(1, 2);

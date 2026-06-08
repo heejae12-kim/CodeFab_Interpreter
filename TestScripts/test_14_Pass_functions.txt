@@ -1,0 +1,34 @@
+Func add(a, b) {
+	return a + b;
+}
+print add(3, 4);
+print add(10, -5);
+
+Func greet(name) {
+	print "Hello, " + name + "!";
+}
+greet("World");
+greet("CodeFab");
+
+Func max(a, b) {
+	if (a > b) {
+		return a;
+	}
+	return b;
+}
+print max(5, 3);
+print max(2, 8);
+
+Func abs(n) {
+	if (n < 0) {
+		return -n;
+	}
+	return n;
+}
+print abs(-7);
+print abs(7);
+
+Func noReturn() {
+	var x = 42;
+}
+noReturn();

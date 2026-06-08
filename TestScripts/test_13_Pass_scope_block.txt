@@ -1,0 +1,22 @@
+var x = 10;
+{
+	var x = 20;
+	print x;
+}
+print x;
+var a = 1;
+{
+	var b = 2;
+	print a + b;
+	{
+		var c = 3;
+		print a + b + c;
+	}
+}
+print a;
+var outer = 100;
+{
+	var inner = 200;
+	outer = outer + inner;
+}
+print outer;

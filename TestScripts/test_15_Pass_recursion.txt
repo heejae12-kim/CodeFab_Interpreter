@@ -1,0 +1,25 @@
+Func factorial(n) {
+	if (n <= 1) {
+		return 1;
+	}
+	return n * factorial(n - 1);
+}
+print factorial(1);
+print factorial(5);
+print factorial(10);
+
+Func fibonacci(n) {
+	if (n <= 0) { return 0; }
+	if (n == 1) { return 1; }
+	return fibonacci(n - 1) + fibonacci(n - 2);
+}
+print fibonacci(0);
+print fibonacci(1);
+print fibonacci(7);
+
+Func power(base, exp) {
+	if (exp == 0) { return 1; }
+	return base * power(base, exp - 1);
+}
+print power(2, 10);
+print power(3, 4);

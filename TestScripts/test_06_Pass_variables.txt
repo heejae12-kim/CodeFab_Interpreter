@@ -1,0 +1,25 @@
+var int_a;
+int_a = 10;
+var int_b = -20;
+
+var double_a = 7.9;
+var double_b;
+double_b = -10.4;
+
+var str_a = "hello";
+var str_b;
+str_b = "world";
+
+var bool_a = true;
+var bool_b = false;
+var uninitialized;
+
+print int_a;
+print int_b;
+print double_a;
+print double_b;
+print str_a;
+print str_b;
+print bool_a;
+print bool_b;
+print uninitialized;    // nill

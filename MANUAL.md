@@ -4,8 +4,12 @@ CodeFab Interpreter가 지원하는 언어 및 shell 사용 설명서.
 
 ---
 
-## 문법 목차
+## Shell 목차
+1. [실행 방법](#1-실행-방법)
+2. [디버그](#2-debug)
 
+
+## 문법 목차
 1. [기본 규칙](#1-기본-규칙)
 2. [리터럴 & 타입](#2-리터럴--타입)
 3. [연산자](#3-연산자)
@@ -17,9 +21,47 @@ CodeFab Interpreter가 지원하는 언어 및 shell 사용 설명서.
 9. [배열](#9-배열)
 10. [오류 유형](#10-오류-유형)
 
-## Shell 목차
-1. [실행 방법](#1-실행-방법)
-2. [디버그](#2-debug)
+---
+
+## 1. 실행 방법
+Shell을 통해 CLI로 코드를 line 단위 실행, unit test 실행, 또는 파일 입력으로 실행을 할 수 있음.
+
+| 옵션 | 설명 | 비고 |
+| ---- | ---- | ---- |
+| - | 프롬프트를 통해 코드를 입력 받고 1줄 단위로 실행함. | - |
+| `unit` | Unit Test를 실행함. | - |
+| `run <파일경로>` | 파일을 입력받아 코드를 실행함. | 입력할 파일의 경로를 반드시 입력해야 함. **파일 형식은 `*.txt`를 권장함.** |
+| `debug` | 파일을 입력 받고 디버그 모드로 실행함. | line 단위 수행, break, 변수 관찰 등을 할 수 있음. |
+### 1) 실행 방법
+```
+CodeFab_Interpreter.exe                        # REPL 모드
+CodeFab_Interpreter.exe unit                   # 단위 테스트 실행
+CodeFab_Interpreter.exe run   <파일경로>       # 파일 실행 모드
+CodeFab_Interpreter.exe debug <파일경로>       # 디버그 모드
+```
+
+## 2. Debug
+### 1) Stepping
+
+statement 단위로 파이프라인을 정지하며 단계별로 실행할 수 있음.
+| 사용법 | 설명 | 비고 |
+| --- | --- | ---|
+| `step` | 현재 statement 실행 후 다음 statement에서 정지 |  |
+| `next` | 현재 statement 실행 | 블록 내부로 진입 X |
+| `break <line>` | 해당 `line`에 breakpoint 설정 | |
+| `Breakpoints` | 현재 설정된 breakpoints 목록 출력 |  |
+| `remove <line>` | `line`의 breakpoint 해제 |  |
+| `continue` | 다음 breakpoint까지 실행 |  |
+
+### 2) Watch Variables
+
+실행 중인 step 단위로 변수 값을 확인할 수 있음.
+|사용법 | 설명 | 비고 |
+| --- | --- | --- |
+| `watch <변수명>` | 변수를 관찰 목록에 추가할 수 있음 |  |
+| `unwatch <변수명>` | 관찰 목록에서 변수를 제거할 수 있음. |  |
+| `watches` | 현재 감시 중인 변수 목록과 값 출력함. |  |
+| `inspect` | 현재 scope에서 모든 변수 출력함. | `[local], [global]` 표시됨. |
 
 ---
 # 문법
@@ -50,7 +92,7 @@ var x = 42;    // 세미콜론 필수
 
 ### 주의: nil은 리터럴이 아닙니다
 
-`nil` 을 소스 코드에 직접 작성할 수 없습니다. 아래 방법으로만 `nil` 값을 얻을 수 있습니다.
+`nil` 을 **소스 코드에 직접 작성할 수 없습니다.** 아래 방법으로만 `nil` 값을 얻을 수 있습니다.
 
 ```
 var x;           // x는 nil
@@ -133,7 +175,9 @@ print 3 == 3;        // true
 print "a" == "a";    // true  (문자열 내용 비교)
 print 3 == "3";      // false (타입이 다름 — 오류 아님)
 print 1 < 2;         // true
-
+```
+#### Error Case
+```
 // ❌ RuntimeError: < <= > >= 에 숫자 외 사용 불가
 print "a" < "b";
 print true > false;
@@ -155,10 +199,12 @@ true and false      // false
 false or true       // true
 !true               // false
 !nil                // true
-
-// ❌ ParseError: && || 는 지원 안 함
-true && false
-true || false
+```
+#### Error Case
+```
+// ❌ ParseError: and or 는 지원 안 함
+true and false
+true or false
 ```
 
 ### 연산자 우선순위 (높음 → 낮음)
@@ -204,7 +250,9 @@ a = a + 1;          // ✅ 변수 대입
 
 var arr = Array(3);
 arr[0] = 99;        // ✅ 배열 요소 대입
-
+```
+#### Error Case
+```
 // ❌ RuntimeError: 선언되지 않은 변수에 대입
 x = 5;
 
@@ -278,7 +326,9 @@ if (x < 0) {
 } else {
 	print "positive";
 }
-
+```
+#### Error Case
+```
 // ❌ ParseError: 조건 괄호 없음
 if x > 3 { print "big"; }
 
@@ -317,7 +367,9 @@ for (var i = 0; i < 3;) {
 	print i;
 	i = i + 1;
 }
-
+```
+#### Error Case
+```
 // ❌ ParseError: 첫 번째 세미콜론 누락
 for (var i = 0 i < 5; i = i + 1) { print i; }
 
@@ -407,9 +459,8 @@ add(1);
 Func add(a, b) { return a + b; }
 Func add(a, b, c) { return a + b + c; }
 
-// add는 현재 (a, b, c) 버전으로 덮어써짐
-// ❌ RuntimeError: Expected 3 arguments but got 2.
-print add(1, 2);
+// 같은 이름의 함수 재정의로 간주됨.
+// ❌ Checker Error: Already a variable with this name in this scope.
 ```
 
 ### 재귀
@@ -465,7 +516,7 @@ var 변수 = Array(크기);
 var arr = Array(5);     // 크기 5짜리 배열, 모든 요소는 nil
 ```
 
-**생성 조건 (엄격)**
+#### 생성 조건
 
 - 크기는 반드시 **숫자 표현식** 이어야 합니다.
 - 정수가 아닌 값(문자열, bool 등)을 크기로 넣으면 `RuntimeError`.
@@ -473,7 +524,9 @@ var arr = Array(5);     // 크기 5짜리 배열, 모든 요소는 nil
 ```
 var a = Array(3);       // ✅
 var b = Array(2 + 3);   // ✅ 숫자 표현식
-
+```
+#### Error Case
+```
 // ❌ RuntimeError: 크기에 문자열 사용
 var c = Array("hello");
 
@@ -511,7 +564,9 @@ arr[0] = 10;
 
 print arr[0];       // ✅ 10
 print arr[1];       // ✅ nil (초기값)
-
+```
+#### Error Case
+```
 // ❌ RuntimeError: 범위 초과
 print arr[5];
 
@@ -547,14 +602,11 @@ for (var i = 0; i < 4; i = i + 1) {
 
 오류 메시지에는 발생한 **줄 번호**가 포함됩니다.
 
-### 자주 혼동하는 오류 사례
+#### Error Case
 
 ```
 // ❌ ParseError: nil 리터럴 없음
 var a = nil;
-
-// ❌ ParseError: && || 없음, and or 사용
-if (x > 0 && y > 0) { ... }
 
 // ❌ ParseError: func 는 소문자 불가
 func foo() { ... }
@@ -584,39 +636,3 @@ if ("a" < "b") { ... }
 | `Array` | 배열 생성 |
 | `true` / `false` | 불리언 리터럴 |
 | `and` / `or` | 논리 연산자 |
-
----
-
-## 1. 실행 방법
-Shell을 통해 CLI로 코드를 line 단위 실행, unit test 실행, 또는 파일 입력으로 실행을 할 수 있음.
-
-| 옵션 | 설명 | 비고 |
-| ---- | ---- | ---- |
-| - | 프롬프트를 통해 코드를 입력 받고 1줄 단위로 실행함. | - |
-| `unit` | Unit Test를 실행함. | - |
-| `run <file_path>` | 파일을 입력받아 코드를 실행함. | 입력할 파일의 경로를 반드시 입력해야 함. **파일 형식은 `*.txt`를 권장함.** |
-| `debug` | 파일을 입력 받고 디버그 모드로 실행함. | line 단위 수행, break, 변수 관찰 등을 할 수 있음. |
-
-
-## 2. Debug
-### 1) Stepping
-
-statement 단위로 파이프라인을 정지하며 단계별로 실행할 수 있음.
-| 사용법 | 설명 | 비고 |
-| --- | --- | ---|
-| `step` | 현재 statement 실행 후 다음 statement에서 정지 |  |
-| `next` | 현재 statement 실행 | 블록 내부로 진입 X |
-| `break <line>` | 해당 `line`에 breakpoint 설정 | |
-| `Breakpoints` | 현재 설정된 breakpoints 목록 출력 |  |
-| `remove <line>` | `line`의 breakpoint 해제 |  |
-| `continue` | 다음 breakpoint까지 실행 |  |
-
-### 2) Watch Variables
-
-실행 중인 step 단위로 변수 값을 확인할 수 있음.
-|사용법 | 설명 | 비고 |
-| --- | --- | --- |
-| `watch <변수명>` | 변수를 관찰 목록에 추가할 수 있음 | TODO) _같은 이름을 가진 local, global 변수가 있으면 어떡하지?_ |
-| `unwatch <변수명>` | 관찰 목록에서 변수를 제거할 수 있음. |  |
-| `watches` | 현재 감시 중인 변수 목록과 값 출력함. |  |
-| `inspect` | 현재 scope에서 모든 변수 출력함. | `[local], [global]` 표시됨. |

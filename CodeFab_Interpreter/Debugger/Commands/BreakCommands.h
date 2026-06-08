@@ -18,3 +18,8 @@ public:
 private:
 	int line_;
 };
+
+class BreakpointsCommand : public DebugCommand {
+public:
+	void execute(Debugger& debugger) override;
+};

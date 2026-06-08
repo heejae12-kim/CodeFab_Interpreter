@@ -17,6 +17,7 @@ public:
 	void continueRun();
 	void addBreakpoint(int line);
 	void removeBreakpoint(int line);
+	void printBreakpoints() const;
 	void addWatch(const std::string& var);
 	void removeWatch(const std::string& var);
 	void printWatches() const;

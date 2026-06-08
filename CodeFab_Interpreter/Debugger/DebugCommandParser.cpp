@@ -14,6 +14,7 @@ std::unique_ptr<DebugCommand> DebugCommandParser::parse(const std::string& input
 	if (cmd == "continue") return std::make_unique<ContinueCommand>();
 	if (cmd == "watches")  return std::make_unique<WatchesCommand>();
 	if (cmd == "inspect")  return std::make_unique<InspectCommand>();
+	if (cmd == "Breakpoints") return std::make_unique<BreakpointsCommand>();
 
 	if (cmd == "break") {
 		int line;

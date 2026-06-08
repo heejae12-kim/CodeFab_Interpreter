@@ -14,6 +14,9 @@ public:
     void        interpret(const std::vector<StmtPtr>& statements);
     void        executeBlock(const std::vector<StmtPtr>& stmts, std::shared_ptr<Environment> env);
     void        executeSingleStmt(Stmt& stmt);
+    std::string getVarAsString(const std::string& name);
+    std::unordered_map<std::string, std::string> getGlobalVars();
+    std::unordered_map<std::string, std::string> getLocalVars();
 
     // depth: 0 = 최상위, 1+ = 블록·함수 내부
     using StmtHook = std::function<void(Stmt&, int depth)>;

@@ -20,6 +20,29 @@ void Interpreter::executeSingleStmt(Stmt& stmt) { execute(stmt); }
 void Interpreter::setStmtHook(StmtHook hook) { stmtHook_ = std::move(hook); }
 void Interpreter::clearStmtHook()             { stmtHook_ = nullptr; }
 
+std::string Interpreter::getVarAsString(const std::string& name) {
+    auto result = currentEnv->tryGet(name);
+    if (!result) return "<undefined>";
+    return stringify(*result);
+}
+
+std::unordered_map<std::string, std::string> Interpreter::getGlobalVars() {
+    std::unordered_map<std::string, std::string> result;
+    for (const auto& [name, val] : globalEnv->getValues()) {
+        if (!std::holds_alternative<CallablePtr>(val))
+            result[name] = stringify(val);
+    }
+    return result;
+}
+
+std::unordered_map<std::string, std::string> Interpreter::getLocalVars() {
+    if (currentEnv == globalEnv) return {};
+    std::unordered_map<std::string, std::string> result;
+    for (const auto& [name, val] : currentEnv->getValues())
+        result[name] = stringify(val);
+    return result;
+}
+
 void Interpreter::execute(Stmt& stmt) {
     if (stmtHook_) stmtHook_(stmt, execDepth_);
     stmt.accept(*this);

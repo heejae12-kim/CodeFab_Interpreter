@@ -23,7 +23,7 @@ public:
     void          define(const std::string& name, ValuableValue value);
     ValuableValue get   (const Token& name) const;
     void          assign(const Token& name, ValuableValue value);
-    std::optional<ValuableValue> tryGet(const std::string& name) const;
+    std::optional<ValuableValue> tryGetValue(const std::string& name) const;
     const std::unordered_map<std::string, ValuableValue>& getValues() const { return values; }
 
 private:

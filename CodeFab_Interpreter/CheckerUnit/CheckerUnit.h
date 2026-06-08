@@ -19,6 +19,7 @@ class CheckerUnit :
 {
 public:
 	void doChecker(vector<StmtPtr>& statements_tree_vector);
+	void doCheckerRepl(vector<StmtPtr>& statements_tree_vector);
 
 private:
 	void checkBlock(const std::vector<StmtPtr>& statements_tree_vector);

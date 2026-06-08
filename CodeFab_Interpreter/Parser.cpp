@@ -59,7 +59,7 @@ StmtPtr Parser::printStatement() {
 StmtPtr Parser::ifStatement() {
 	int line = previous().getLine();
 	consume(TokenType::LEFT_PAREN, "Expected '(' after 'if'.");
-	ExprPtr p_cond = comparison();
+	ExprPtr p_cond = logicalOr();
 	consume(TokenType::RIGHT_PAREN, "Expected ')' after if condition.");
 	StmtPtr p_thenBranch = statement();
 	StmtPtr p_elseBranch;
@@ -77,7 +77,7 @@ StmtPtr Parser::forStatement() {
 	else                                   consume(TokenType::SEMICOLON, "");
 
 	ExprPtr p_cond;
-	if (!check(TokenType::SEMICOLON)) p_cond = comparison();
+	if (!check(TokenType::SEMICOLON)) p_cond = logicalOr();
 	consume(TokenType::SEMICOLON, "Expected ';' after for condition.");
 
 	ExprPtr p_incr;

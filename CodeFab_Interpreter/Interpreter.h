@@ -1,6 +1,7 @@
 #pragma once
 #include "Stmt.h"
 #include "Environment.h"
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -10,12 +11,20 @@
 class Interpreter : public ExprVisitor, public StmtVisitor {
 public:
     Interpreter();
-    void interpret(const std::vector<StmtPtr>& statements);
-    void executeBlock(const std::vector<StmtPtr>& stmts, std::shared_ptr<Environment> env);
+    void        interpret(const std::vector<StmtPtr>& statements);
+    void        executeBlock(const std::vector<StmtPtr>& stmts, std::shared_ptr<Environment> env);
+    void        executeSingleStmt(Stmt& stmt);
+
+    // depth: 0 = 최상위, 1+ = 블록·함수 내부
+    using StmtHook = std::function<void(Stmt&, int depth)>;
+    void setStmtHook(StmtHook hook);
+    void clearStmtHook();
 
 private:
     std::shared_ptr<Environment> globalEnv;
     std::shared_ptr<Environment> currentEnv;
+    StmtHook stmtHook_;
+    int      execDepth_     = 0;
 
     ValuableValue evaluate(Expr& expr);
     void          execute(Stmt& stmt);

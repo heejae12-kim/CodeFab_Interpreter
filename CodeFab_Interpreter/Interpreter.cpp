@@ -15,7 +15,15 @@ void Interpreter::interpret(const std::vector<StmtPtr>& statements) {
     for (const auto& stmt : statements) execute(*stmt);
 }
 
-void Interpreter::execute(Stmt& stmt) { stmt.accept(*this); }
+void Interpreter::executeSingleStmt(Stmt& stmt) { execute(stmt); }
+
+void Interpreter::setStmtHook(StmtHook hook) { stmtHook_ = std::move(hook); }
+void Interpreter::clearStmtHook()             { stmtHook_ = nullptr; }
+
+void Interpreter::execute(Stmt& stmt) {
+    if (stmtHook_) stmtHook_(stmt, execDepth_);
+    stmt.accept(*this);
+}
 ValuableValue Interpreter::evaluate(Expr& expr) { return expr.accept(*this); }
 
 // ── Utilities ──────────────────────────────────────────────────────────────────
@@ -84,15 +92,18 @@ void Interpreter::checkNumberOperands(const Token& op, const ValuableValue& left
 
 void Interpreter::executeBlock(const std::vector<StmtPtr>& stmts,
                                std::shared_ptr<Environment> env) {
+    ++execDepth_;
     auto saved = currentEnv;
     currentEnv = std::move(env);
     try {
         for (const auto& s : stmts) execute(*s);
     } catch (...) {
         currentEnv = saved;
+        --execDepth_;
         throw;
     }
     currentEnv = saved;
+    --execDepth_;
 }
 
 // ── ExprVisitor ────────────────────────────────────────────────────────────────

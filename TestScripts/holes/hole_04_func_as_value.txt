@@ -1,0 +1,19 @@
+// ── hole_04_func_as_value.txt ─────────────────────────────────────────────
+// [홀] 함수를 값으로 출력·대입·비교
+//
+// 함수는 CallablePtr(shared_ptr<Callable>)로 ValuableValue에 저장된다.
+// stringify()는 toString()을 호출해 "<fn 이름>" 형태로 출력한다.
+// 함수를 변수에 대입하거나 print 하는 것이 에러 없이 동작한다.
+//
+// 기대 동작:
+//   print foo    → <fn foo>  (에러 없음)
+//   var f = foo  → f에 함수 저장
+//   f(3)         → foo(3) 호출과 동일
+// ──────────────────────────────────────────────────────────────────────────
+
+Func foo(n) { return n * 2; }
+
+print foo;          // expect: <fn foo>
+var f = foo;
+print f;            // expect: <fn foo>
+print f(3);         // expect: 6  (변수에 저장된 함수 호출)

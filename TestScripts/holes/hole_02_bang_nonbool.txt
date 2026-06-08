@@ -1,0 +1,18 @@
+// ── hole_02_bang_nonbool.txt ──────────────────────────────────────────────
+// [홀] ! 연산자 — 숫자·문자열·nil에도 에러 없이 적용됨
+//
+// Interpreter의 visitUnaryExpr(BANG)은 isFalse()를 호출한다.
+// isFalse()는 nil → true, false → true, 그 외(숫자·문자열 등) → false 반환.
+// 즉 어떤 타입에도 ! 적용이 가능하며 타입 오류를 발생시키지 않는다.
+//
+// 기대 동작:
+//   !10      → false  (숫자는 truthy → 부정 = false)
+//   !0       → false  (0도 truthy로 처리됨 ← nil/false만 falsy)
+//   !"hello" → false
+//   !nil     → true
+// ──────────────────────────────────────────────────────────────────────────
+
+print !10;        // expect: false  (에러 없음)
+print !0;         // expect: false  (0도 truthy, 에러 없음)
+print !"hello";   // expect: false
+print !nil;       // expect: true

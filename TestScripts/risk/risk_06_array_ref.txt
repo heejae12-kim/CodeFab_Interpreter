@@ -1,0 +1,20 @@
+// ── risk_06_array_ref.txt ────────────────────────────────────────────────
+// 배열 참조 전달 검증 (shared_ptr 의미론)
+// 함수 내에서 배열 원소를 수정하면 원본에 반영되는가?
+// ──────────────────────────────────────────────────────────────────────────
+
+Func fill(arr) {
+    arr[0] = 99;
+    arr[1] = 88;
+}
+
+var myArr = Array(3);
+myArr[0] = 1;
+myArr[1] = 2;
+myArr[2] = 3;
+
+fill(myArr);
+
+print myArr[0];   // expect: 99 (참조 전달이면)
+print myArr[1];   // expect: 88
+print myArr[2];   // expect: 3  (변경 없음)

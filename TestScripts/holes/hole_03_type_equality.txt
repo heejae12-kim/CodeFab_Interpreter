@@ -1,0 +1,19 @@
+// ── hole_03_type_equality.txt ─────────────────────────────────────────────
+// [홀] == 연산자 — 타입이 다르면 무조건 false (엄격한 타입 동등성)
+//
+// Interpreter::isEqual()은 a.index() != b.index()이면 즉시 false를 반환한다.
+// 즉 double(0), bool(2), nullptr_t(3) 등 variant index가 다르면 값 비교 없이 false.
+//
+// 기대 동작:
+//   true == 1     → false  (bool vs double, index 다름)
+//   false == 0    → false
+//   nil == false  → false  (nullptr_t vs bool)
+//   nil == nil    → true   (같은 타입)
+//   0 == 0.0      → true   (둘 다 double)
+// ──────────────────────────────────────────────────────────────────────────
+
+print true == 1;      // expect: false
+print false == 0;     // expect: false
+print nil == false;   // expect: false
+print nil == nil;     // expect: true
+print 0 == 0.0;       // expect: true

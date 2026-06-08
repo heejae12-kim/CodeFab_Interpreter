@@ -1,0 +1,7 @@
+// ── err_05_self_init.txt ──────────────────────────────────────────────────
+// [CheckerError / StaticError] 지역 변수를 자기 초기화식에서 읽기
+// 출처: gist Section 2-2
+// 기대 오류: "Can't read local variable in its own initializer." 류의 메시지
+// ──────────────────────────────────────────────────────────────────────────
+
+{ var a = a; }

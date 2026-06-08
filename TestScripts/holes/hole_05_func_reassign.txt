@@ -1,0 +1,18 @@
+// ── hole_05_func_reassign.txt ─────────────────────────────────────────────
+// [홀] 함수명 재대입 후 호출
+//
+// 함수는 일반 변수와 같은 환경에 저장되므로 이름에 다른 값을 대입할 수 있다.
+// 재대입 자체는 에러 없이 성공하나, 이후 호출 시 "Can only call functions." 발생.
+//
+// 기대 동작:
+//   foo = 5       → 에러 없음 (변수 대입)
+//   print foo     → 5
+//   foo()         → [Runtime Error] Can only call functions.
+// ──────────────────────────────────────────────────────────────────────────
+
+Func foo() { return 42; }
+print foo();   // expect: 42  (정상 호출)
+
+foo = 5;
+print foo;     // expect: 5   (숫자로 덮어쓰기 성공)
+foo();         // expect: [Runtime Error] Can only call functions.

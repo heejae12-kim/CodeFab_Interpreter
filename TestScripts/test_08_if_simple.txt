@@ -1,0 +1,24 @@
+// ── test_08_if_simple.txt ─────────────────────────────────────────────────
+// 단순 if/else / dangling else
+// 출처: 요구사항 gist Section 1-3
+// 실행: x64/Debug/CodeFab_Interpreter.exe run TestScripts/test_08_if_simple.txt
+// ──────────────────────────────────────────────────────────────────────────
+
+// --- 단순 if (조건 true) ---
+if (true) print "bbq";          // expect: bbq
+
+// --- if/else (조건 false → else 실행) ---
+if (false) print "no"; else print "kfc";   // expect: kfc
+
+// --- dangling else: 가장 가까운 if 에 결합 ---
+if (true)
+    if (false) print "kfc";
+    else print "bbq";            // expect: bbq
+
+// --- for 반복문 기본 ---
+for (var j = 0; j < 3; j = j + 1) {
+    print j;
+}
+// expect: 0
+// expect: 1
+// expect: 2

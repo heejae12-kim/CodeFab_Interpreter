@@ -1,0 +1,7 @@
+// ── err_10_type_mismatch_plus.txt ─────────────────────────────────────────
+// [RuntimeError] + 연산자에 숫자/문자열 혼용
+// 출처: gist Section 2-3
+// 기대 오류: "Operands must be two numbers or two strings." 류의 메시지
+// ──────────────────────────────────────────────────────────────────────────
+
+print 1 + "HI";

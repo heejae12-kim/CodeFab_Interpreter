@@ -1,0 +1,7 @@
+// ── err_07_return_outside_func.txt ────────────────────────────────────────
+// [CheckerError / StaticError] 함수 외부에서 return 사용
+// 출처: 3일차 PDF Chapter 2 오류 요구사항
+// 기대 오류: "Can't return from top-level code." 류의 메시지
+// ──────────────────────────────────────────────────────────────────────────
+
+return 5;

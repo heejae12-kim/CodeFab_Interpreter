@@ -1,0 +1,7 @@
+// err_19_array_set_nonnumber_index.txt
+// 배열에 숫자가 아닌 인덱스로 할당 시 RuntimeError 검증
+// visitIndexSetExpr — "Array index must be a number."
+// 기대: [Runtime Error] Array index must be a number.
+
+var a = Array(3);
+a[true] = 99;

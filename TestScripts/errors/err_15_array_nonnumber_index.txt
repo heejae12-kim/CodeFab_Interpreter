@@ -1,0 +1,8 @@
+// ── err_15_array_nonnumber_index.txt ─────────────────────────────────────
+// [RuntimeError] 배열 인덱스에 숫자가 아닌 값 사용
+// 출처: 3일차 PDF Chapter 3 오류 요구사항
+// 기대 오류: "Array index must be a number." 류의 메시지
+// ──────────────────────────────────────────────────────────────────────────
+
+var arr = Array(3);
+print arr["hello"];

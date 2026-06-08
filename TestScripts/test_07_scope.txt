@@ -1,0 +1,38 @@
+// ── test_07_scope.txt ──────────────────────────────────────────────────────
+// 변수 선언 / 재할당 / 블록 스코프 / 변수 쉐도잉 / 중첩 스코프
+// 출처: 요구사항 gist Section 1-2
+// 실행: x64/Debug/CodeFab_Interpreter.exe run TestScripts/test_07_scope.txt
+// ──────────────────────────────────────────────────────────────────────────
+
+// --- 선언 & 사용 ---
+var a = 10;
+var b = 20;
+print a + b;             // expect: 30
+
+// --- 재할당 ---
+a = a + 5;
+print a;                 // expect: 15
+
+// --- 블록 스코프 & 변수 쉐도잉 ---
+var x = "global";
+{
+    var x = "inner";
+    print x;             // expect: inner
+}
+print x;                 // expect: global
+
+// --- 안쪽 블록에서 바깥 변수 수정 ---
+var count = 0;
+{
+    count = count + 1;
+}
+print count;             // expect: 1
+
+// --- 중첩 스코프 ---
+var outer = "A";
+{
+    var inner = "B";
+    {
+        print outer + inner;   // expect: AB
+    }
+}

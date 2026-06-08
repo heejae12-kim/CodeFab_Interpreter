@@ -3,7 +3,7 @@
 #include <string>
 #include "InterpreterRunner.h"
 
-enum class RunMode { REPL, FILE_RUN };
+enum class RunMode { REPL, FILE_RUN, DEBUG };
 
 class InterpreterFactory {
 public:

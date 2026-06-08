@@ -24,11 +24,15 @@ int main(int argc, char* argv[]) {
 	} else if (option == "run" && argc >= 3) {
 		auto runner = InterpreterFactory::create(RunMode::FILE_RUN, argv[2]);
 		runner->run();
+	} else if (option == "debug" && argc >= 3) {
+		auto runner = InterpreterFactory::create(RunMode::DEBUG, argv[2]);
+		runner->run();
 	} else {
 		std::cerr << "Usage:\n"
 		          << "  (no args)          : REPL mode\n"
 		          << "  unit               : run unit tests\n"
-		          << "  run <file>         : execute file\n";
+		          << "  run   <file>       : execute file\n"
+		          << "  debug <file>       : debug file\n";
 		return 1;
 	}
 

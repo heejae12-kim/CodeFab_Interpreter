@@ -45,32 +45,32 @@ var x = 42;    // 세미콜론 필수
 | `number` | `42`, `3.14`, `-7` | 배정밀도 부동소수점. 정수값이면 소수점 없이 출력 |
 | `string` | `"hello"`, `""` | 큰따옴표로 감쌈 |
 | `bool` | `true`, `false` | 불리언 |
-| `nullptr` | *(소스에 직접 쓸 수 없음)* | 초기화되지 않은 변수, `return;`, 빈 배열 요소의 값 |
+| `nil` | *(소스에 직접 쓸 수 없음)* | 초기화되지 않은 변수, `return;`, 빈 배열 요소의 값 |
 | `array` | `Array(n)` | 크기 n의 배열. 내장 함수 `Array`로만 생성 가능 |
 
-### 주의: nullptr은 리터럴이 아닙니다
+### 주의: nil은 리터럴이 아닙니다
 
-`nullptr` 을 소스 코드에 직접 작성할 수 없습니다. 아래 방법으로만 `nullptr` 값을 얻을 수 있습니다.
+`nil` 을 소스 코드에 직접 작성할 수 없습니다. 아래 방법으로만 `nil` 값을 얻을 수 있습니다.
 
 ```
-var x;           // x는 nullptr
+var x;           // x는 nil
 var y = Array(3);
-print y[0];      // nullptr  (배열 초기 요소)
+print y[0];      // nil  (배열 초기 요소)
 ```
 
 ```
-// ❌ ParseError: nullptr은 예약어가 아니므로 식별자로 해석됨
-var a = nullptr;
+// ❌ ParseError: nil은 예약어가 아니므로 식별자로 해석됨
+var a = nil;
 ```
 
 ### 진리값 규칙
 
-`false` 와 `nullptr` 만 거짓(falsy)입니다. **숫자 `0`, 빈 문자열 `""` 은 참(truthy)** 입니다.
+`false` 와 `nil` 만 거짓(falsy)입니다. **숫자 `0`, 빈 문자열 `""` 은 참(truthy)** 입니다.
 
 | 값 | 진리값 |
 |----|--------|
 | `false` | 거짓 |
-| `nullptr` | 거짓 |
+| `nil` | 거짓 |
 | `true` | 참 |
 | `0`, `3.14` 등 모든 숫자 | 참 |
 | `""`, `"hello"` 등 모든 문자열 | 참 |
@@ -154,7 +154,7 @@ print 1 > "2";
 true and false      // false
 false or true       // true
 !true               // false
-!nullptr                // true
+!nil                // true
 
 // ❌ ParseError: && || 는 지원 안 함
 true && false
@@ -183,12 +183,12 @@ true || false
 ### 선언
 
 ```
-var 이름;               // nullptr 로 초기화
+var 이름;               // nil 로 초기화
 var 이름 = 표현식;
 ```
 
 ```
-var x;              // nullptr
+var x;              // nil
 var y = 10;
 var msg = "CodeFab";
 var flag = true;
@@ -235,7 +235,7 @@ print true;         // true
 print false;        // false
 
 var x;
-print x;            // nullptr
+print x;            // nil
 
 var arr = Array(3);
 arr[0] = 10;  arr[1] = 20;  arr[2] = 30;
@@ -381,8 +381,8 @@ print add(3, 7);    // 10
 | 작성 방법 | 반환 결과 |
 |---------|---------|
 | `return 표현식;` | 표현식의 값 |
-| `return;` | `nullptr` |
-| `return` 없이 함수 끝 | `nullptr` |
+| `return;` | `nil` |
+| `return` 없이 함수 끝 | `nil` |
 
 ### 인자 수
 
@@ -423,8 +423,6 @@ Func fact(n) {
 print fact(5);    // 120
 ```
 
-### 클로저 & 1급 함수
-
 함수는 선언 시점의 환경을 캡처합니다(렉시컬 스코프). 변수에 담거나 다른 함수의 인자·반환값으로 사용할 수 있습니다.
 
 ```
@@ -464,7 +462,7 @@ var 변수 = Array(크기);
 ```
 
 ```
-var arr = Array(5);     // 크기 5짜리 배열, 모든 요소는 nullptr
+var arr = Array(5);     // 크기 5짜리 배열, 모든 요소는 nil
 ```
 
 **생성 조건 (엄격)**
@@ -501,7 +499,7 @@ print arr;          // [a, b, c]
 
 | 상황 | 결과 |
 |------|------|
-| 초기 요소 읽기 | `nullptr` |
+| 초기 요소 읽기 | `nil` |
 | 정상 범위 접근 (0 이상 size 미만) | 해당 값 |
 | 인덱스 ≥ size 또는 인덱스 < 0 | `RuntimeError` |
 | 인덱스가 숫자가 아님 (문자열, bool 등) | `RuntimeError` |
@@ -512,7 +510,7 @@ var arr = Array(3);
 arr[0] = 10;
 
 print arr[0];       // ✅ 10
-print arr[1];       // ✅ nullptr (초기값)
+print arr[1];       // ✅ nil (초기값)
 
 // ❌ RuntimeError: 범위 초과
 print arr[5];
@@ -552,8 +550,8 @@ for (var i = 0; i < 4; i = i + 1) {
 ### 자주 혼동하는 오류 사례
 
 ```
-// ❌ ParseError: nullptr 리터럴 없음
-var a = nullptr;
+// ❌ ParseError: nil 리터럴 없음
+var a = nil;
 
 // ❌ ParseError: && || 없음, and or 사용
 if (x > 0 && y > 0) { ... }

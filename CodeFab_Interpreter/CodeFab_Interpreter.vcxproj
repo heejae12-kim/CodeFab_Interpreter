@@ -167,6 +167,12 @@
     <ClCompile Include="InterpreterFactory\InterpreterFactory.cpp" />
     <ClCompile Include="InterpreterFactory\FileRunner.cpp" />
     <ClCompile Include="InterpreterFactory\ReplRunner.cpp" />
+    <ClCompile Include="InterpreterFactory\DebugRunner.cpp" />
+    <ClCompile Include="Debugger\Debugger.cpp" />
+    <ClCompile Include="Debugger\DebugCommandParser.cpp" />
+    <ClCompile Include="Debugger\Commands\FlowCommands.cpp" />
+    <ClCompile Include="Debugger\Commands\BreakCommands.cpp" />
+    <ClCompile Include="Debugger\Commands\WatchCommands.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -176,6 +182,13 @@
     <ClInclude Include="InterpreterFactory\InterpreterFactory.h" />
     <ClInclude Include="InterpreterFactory\FileRunner.h" />
     <ClInclude Include="InterpreterFactory\ReplRunner.h" />
+    <ClInclude Include="InterpreterFactory\DebugRunner.h" />
+    <ClInclude Include="Debugger\DebugCommand.h" />
+    <ClInclude Include="Debugger\Debugger.h" />
+    <ClInclude Include="Debugger\DebugCommandParser.h" />
+    <ClInclude Include="Debugger\Commands\FlowCommands.h" />
+    <ClInclude Include="Debugger\Commands\BreakCommands.h" />
+    <ClInclude Include="Debugger\Commands\WatchCommands.h" />
     <ClInclude Include="CheckerUnit\CheckEvalOperation.h" />
     <ClInclude Include="CheckerUnit\CheckerError.h" />
     <ClInclude Include="CheckerUnit\CheckerUnit.h" />

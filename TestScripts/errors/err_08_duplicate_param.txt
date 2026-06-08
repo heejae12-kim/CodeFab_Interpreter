@@ -1,0 +1,9 @@
+// ── err_08_duplicate_param.txt ────────────────────────────────────────────
+// [CheckerError / StaticError] 함수 파라미터 이름 중복
+// 출처: 3일차 PDF Chapter 2 오류 요구사항
+// 기대 오류: "Duplicate parameter name." 류의 메시지
+// ──────────────────────────────────────────────────────────────────────────
+
+Func foo(a, a) {
+    return a;
+}

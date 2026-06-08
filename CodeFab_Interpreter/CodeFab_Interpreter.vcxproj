@@ -173,6 +173,7 @@
     <ClCompile Include="Debugger\Commands\FlowCommands.cpp" />
     <ClCompile Include="Debugger\Commands\BreakCommands.cpp" />
     <ClCompile Include="Debugger\Commands\WatchCommands.cpp" />
+    <ClCompile Include="InterpreterFactoryTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

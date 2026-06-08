@@ -1,0 +1,7 @@
+// ── err_06_duplicate_var.txt ──────────────────────────────────────────────
+// [CheckerError / StaticError] 같은 로컬 스코프에서 변수 중복 선언
+// 출처: gist Section 2-2
+// 기대 오류: "Already a variable with this name in this scope." 류의 메시지
+// ──────────────────────────────────────────────────────────────────────────
+
+{ var a = "hi"; var a = 3; }

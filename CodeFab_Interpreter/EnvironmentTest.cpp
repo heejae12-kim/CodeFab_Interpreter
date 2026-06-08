@@ -72,3 +72,19 @@ TEST_F(EnvironmentTest, AssignWalksUpToEnclosingScope) {
 
     EXPECT_EQ(asNum(global->get(nameTok("a"))), 9.0);
 }
+
+TEST_F(EnvironmentTest, TryGetValueFindsInEnclosing) {
+    global->define("x", 42.0);
+    auto inner = std::make_shared<Environment>(global);
+
+    auto result = inner->tryGetValue("x");
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(std::get<double>(*result), 42.0);
+}
+
+TEST_F(EnvironmentTest, TryGetValueReturnsNulloptWhenMissing) {
+    auto result = local.tryGetValue("notExist");
+
+    EXPECT_FALSE(result.has_value());
+}

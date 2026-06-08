@@ -1,0 +1,22 @@
+// ── hole_01_and_or_variable.txt ──────────────────────────────────────────
+// [홀] and/or 연산자 — 변수 피연산자의 타입 체크 누락
+//
+// CheckerUnit은 리터럴 상수에 대해서만 상수 접기(constant folding)로 타입을
+// 검사한다. 변수가 피연산자일 경우 CheckerUnit이 검사하지 않으며, 런타임에서도
+// 별도의 타입 체크가 없어 non-bool 값이 그대로 반환된다.
+//
+// 기대 동작:
+//   x and y → x가 truthy면 y 반환 (= 10), 에러 없음
+//   x or y  → x가 truthy면 x 반환 (= 5),  에러 없음
+//   a and b  → a가 falsy(false)면 a 반환
+// ──────────────────────────────────────────────────────────────────────────
+
+var x = 5;
+var y = 10;
+print x and y;   // expect: 10  (bool 아닌 double 반환, 에러 없음)
+print x or y;    // expect: 5   (x가 truthy → x 반환)
+
+var a = false;
+var b = "hello";
+print a or b;    // expect: hello  (a가 falsy → b 반환)
+print a and b;   // expect: false  (a가 falsy → a 반환)

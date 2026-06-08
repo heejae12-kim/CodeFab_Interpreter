@@ -1,0 +1,7 @@
+// err_18_array_set_non_array.txt
+// 배열이 아닌 변수에 인덱스 할당 시 RuntimeError 검증
+// visitIndexSetExpr — "Only arrays support index access."
+// 기대: [Runtime Error] Only arrays support index access.
+
+var x = 5;
+x[0] = 99;

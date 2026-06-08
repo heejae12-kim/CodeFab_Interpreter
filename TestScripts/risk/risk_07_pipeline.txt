@@ -1,0 +1,41 @@
+// ── risk_07_pipeline.txt ─────────────────────────────────────────────────
+// 통합 파이프라인 검증 (함수 + 재귀 + 배열 + 클로저 복합)
+// ──────────────────────────────────────────────────────────────────────────
+
+// [1] 함수 + 재귀
+print "=== factorial ===";
+Func fact(n) {
+    if (n <= 1) return 1;
+    return n * fact(n - 1);
+}
+print fact(5);    // expect: 120
+print fact(10);   // expect: 3628800
+
+// [2] 배열 + 루프
+print "=== array fill ===";
+var arr = Array(5);
+for (var i = 0; i < 5; i = i + 1) {
+    arr[i] = i * 2;
+}
+print arr[0];   // expect: 0
+print arr[2];   // expect: 4
+print arr[4];   // expect: 8
+
+// [3] 함수 + 배열 조합
+print "=== sum array ===";
+Func sumArr(arr, n) {
+    var s = 0;
+    for (var i = 0; i < n; i = i + 1) {
+        s = s + arr[i];
+    }
+    return s;
+}
+print sumArr(arr, 5);   // expect: 0+2+4+6+8 = 20
+
+// [4] 클로저
+print "=== closure ===";
+var base = 100;
+Func addBase(n) { return base + n; }
+print addBase(5);    // expect: 105
+base = 200;
+print addBase(5);    // expect: 205 (참조 캡처면)

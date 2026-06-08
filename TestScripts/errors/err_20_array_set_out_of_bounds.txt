@@ -1,0 +1,7 @@
+// err_20_array_set_out_of_bounds.txt
+// 배열 범위를 초과한 인덱스에 할당 시 RuntimeError 검증
+// visitIndexSetExpr — "Array index out of range."
+// 기대: [Runtime Error] Array index out of range.
+
+var a = Array(2);
+a[5] = 99;

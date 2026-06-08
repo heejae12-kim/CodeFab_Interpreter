@@ -1,0 +1,28 @@
+// ── risk_05_closure.txt ──────────────────────────────────────────────────
+// 클로저 동작 검증
+// [1] 외부 변수 캡처 후 변경 시 반영 여부 (환경 참조)
+// [2] 카운터 패턴 (내부 상태 유지)
+// ──────────────────────────────────────────────────────────────────────────
+
+// [1] 외부 변수 캡처
+print "=== closure capture ===";
+var x = 10;
+Func getX() { return x; }
+print getX();   // expect: 10
+x = 20;
+print getX();   // expect: 20 (환경 참조면) 또는 10 (값 복사면)
+
+// [2] 카운터 패턴
+print "=== counter ===";
+Func makeCounter() {
+    var count = 0;
+    Func inc() {
+        count = count + 1;
+        return count;
+    }
+    return inc;
+}
+var c = makeCounter();
+print c();   // expect: 1
+print c();   // expect: 2
+print c();   // expect: 3

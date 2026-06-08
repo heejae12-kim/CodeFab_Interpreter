@@ -164,11 +164,18 @@
     <ClCompile Include="InterpreterTest.cpp" />
     <ClCompile Include="InterpreterStmtTest.cpp" />
     <ClCompile Include="ExecutorFuncArrayTest.cpp" />
+    <ClCompile Include="InterpreterFactory\InterpreterFactory.cpp" />
+    <ClCompile Include="InterpreterFactory\FileRunner.cpp" />
+    <ClCompile Include="InterpreterFactory\ReplRunner.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="InterpreterFactory\InterpreterRunner.h" />
+    <ClInclude Include="InterpreterFactory\InterpreterFactory.h" />
+    <ClInclude Include="InterpreterFactory\FileRunner.h" />
+    <ClInclude Include="InterpreterFactory\ReplRunner.h" />
     <ClInclude Include="CheckerUnit\CheckEvalOperation.h" />
     <ClInclude Include="CheckerUnit\CheckerError.h" />
     <ClInclude Include="CheckerUnit\CheckerUnit.h" />

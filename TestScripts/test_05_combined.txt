@@ -1,0 +1,81 @@
+Func bubbleSort(a, n) {
+    for (var i = 0; i < n - 1; i = i + 1) {
+        for (var j = 0; j < n - i - 1; j = j + 1) {
+            if (a[j] > a[j + 1]) {
+                var tmp = a[j];
+                a[j]     = a[j + 1];
+                a[j + 1] = tmp;
+            }
+        }
+    }
+}
+
+Func arraySum(a, n) {
+    var s = 0;
+    for (var i = 0; i < n; i = i + 1) {
+        s = s + a[i];
+    }
+    return s;
+}
+
+Func arrayMin(a, n) {
+    var m = a[0];
+    for (var i = 1; i < n; i = i + 1) {
+        if (a[i] < m) {
+            m = a[i];
+        }
+    }
+    return m;
+}
+
+Func arrayMax(a, n) {
+    var m = a[0];
+    for (var i = 1; i < n; i = i + 1) {
+        if (a[i] > m) {
+            m = a[i];
+        }
+    }
+    return m;
+}
+
+Func binarySearch(a, n, target) {
+    var lo = 0;
+    var hi = n - 1;
+    for (var step = 0; step < n; step = step + 1) {
+        if (lo > hi) return -1;
+        var mid = (lo + hi) / 2;
+        if (a[mid] == target) return mid;
+        if (a[mid] < target) {
+            lo = mid + 1;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    return -1;
+}
+
+var SIZE = 8;
+var data = Array(8);
+data[0] = 64;
+data[1] = 25;
+data[2] = 12;
+data[3] = 22;
+data[4] = 11;
+data[5] = 90;
+data[6] = 37;
+data[7] = 55;
+
+print arrayMin(data, SIZE);     // 11
+print arrayMax(data, SIZE);     // 90
+print arraySum(data, SIZE);     // 316
+
+bubbleSort(data, SIZE);
+
+for (var i = 0; i < SIZE; i = i + 1) {
+    print data[i];
+}
+// 출력: 11 12 22 25 37 55 64 90
+
+print binarySearch(data, SIZE, 37);     // 4  (정렬 후 인덱스)
+print binarySearch(data, SIZE, 11);     // 0
+print binarySearch(data, SIZE, 99);     // -1 (없음)

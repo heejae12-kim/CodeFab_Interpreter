@@ -2,6 +2,8 @@
 #include "InterpreterFactory/InterpreterFactory.h"
 #include <string>
 #include <iostream>
+#include <algorithm>
+#include <cctype>
 
 int main(int argc, char* argv[]) {
 	if (argc == 1) {
@@ -12,8 +14,12 @@ int main(int argc, char* argv[]) {
 
 	std::string option = argv[1];
 
+	std::transform(option.begin(), option.end(), option.begin(), [](unsigned char c) {
+		return std::tolower(c);
+		});
+
 	if (option == "unit") {
-		testing::InitGoogleMock(&argc, argv);
+		testing::InitGoogleMock();
 		return RUN_ALL_TESTS();
 	} else if (option == "run" && argc >= 3) {
 		auto runner = InterpreterFactory::create(RunMode::FILE_RUN, argv[2]);

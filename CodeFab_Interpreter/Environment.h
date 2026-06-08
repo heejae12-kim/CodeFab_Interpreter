@@ -1,6 +1,7 @@
 #pragma once
 #include "Token.h"
 #include <unordered_map>
+#include <optional>
 #include <string>
 #include <memory>
 #include <stdexcept>
@@ -22,6 +23,8 @@ public:
     void          define(const std::string& name, ValuableValue value);
     ValuableValue get   (const Token& name) const;
     void          assign(const Token& name, ValuableValue value);
+    std::optional<ValuableValue> tryGet(const std::string& name) const;
+    const std::unordered_map<std::string, ValuableValue>& getValues() const { return values; }
 
 private:
     std::unordered_map<std::string, ValuableValue> values;

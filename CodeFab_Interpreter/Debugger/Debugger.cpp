@@ -31,7 +31,7 @@ Debugger::Debugger(std::vector<StmtPtr>& stmts, Interpreter& interpreter, const 
 
 void Debugger::runDebugLoop() {
 	std::cout << "CodeFab Debugger\n"
-	          << "Commands: step | next | continue | break <n> | remove <n> | watch <var> | unwatch <var> | watches | inspect | exit\n"
+	          << "Commands: step | next | continue | break <n> | remove <n> | Breakpoints | watch <var> | unwatch <var> | watches | inspect | exit\n"
 	          << "──────────────────────────────────────────\n";
 
 	if (stmts_.empty()) {
@@ -210,6 +210,16 @@ void Debugger::removeBreakpoint(int line) {
 		std::cout << "[Debugger] Breakpoint removed at line " << line << "\n";
 	else
 		std::cout << "[Debugger] No breakpoint at line " << line << "\n";
+}
+
+void Debugger::printBreakpoints() const {
+	if (breakpoints_.empty()) {
+		std::cout << "[Debugger] No breakpoints set.\n";
+		return;
+	}
+	std::cout << "[Debugger] Breakpoints:\n";
+	for (int bp : breakpoints_)
+		std::cout << "  " << lineTag(bp) << "\n";
 }
 
 void Debugger::addWatch(const std::string& var) {

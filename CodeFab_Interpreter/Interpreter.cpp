@@ -236,6 +236,8 @@ ValuableValue Interpreter::visitCallExpr(CallExpr& expr) {
             "Expected " + std::to_string(callable->arity()) +
             " arguments but got " + std::to_string(arguments.size()) + ".");
 
+    if (functionDepth_ >= MAX_CALL_DEPTH)
+        throw RuntimeError(expr.getParen(), "Maximum call stack size exceeded.");
     ++functionDepth_;
     ValuableValue result = nullptr;
     try {

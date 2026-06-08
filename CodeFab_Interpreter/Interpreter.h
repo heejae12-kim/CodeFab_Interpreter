@@ -31,6 +31,7 @@ private:
     StmtHook stmtHook_;
     int      execDepth_     = 0;
     int      functionDepth_ = 0;  // 함수 호출로만 증가 (loop/block 진입은 제외)
+    static constexpr int MAX_CALL_DEPTH = 30;
 
     ValuableValue evaluate(Expr& expr);
     void          execute(Stmt& stmt);

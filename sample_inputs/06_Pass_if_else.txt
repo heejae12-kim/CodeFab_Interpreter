@@ -1,0 +1,30 @@
+var x = 10;
+if (x > 5) {
+	print "x > 5";
+}
+if (x < 5) {
+	print "x < 5";
+} else {
+	print "x >= 5";
+}
+if (x == 10) {
+	print "x is 10";
+} else {
+	print "x is not 10";
+}
+var y = 0;
+if (x > 0 and y == 0) 
+{
+	print "x positive and y zero";
+}
+if ( (x > 100) or (y == 0) ) {
+	print "either x > 100 or y == 0";
+}
+if (true) {
+	print "always true";
+}
+if (false) {
+	print "never printed";
+} else {
+	print "else branch";
+}

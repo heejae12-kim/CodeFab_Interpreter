@@ -213,7 +213,16 @@ ValuableValue Interpreter::visitCallExpr(CallExpr& expr) {
             "Expected " + std::to_string(callable->arity()) +
             " arguments but got " + std::to_string(arguments.size()) + ".");
 
-    return callable->call(*this, arguments, expr.getParen());
+    ++functionDepth_;
+    ValuableValue result = nullptr;
+    try {
+        result = callable->call(*this, arguments, expr.getParen());
+    } catch (...) {
+        --functionDepth_;
+        throw;
+    }
+    --functionDepth_;
+    return result;
 }
 
 ValuableValue Interpreter::visitIndexGetExpr(ArrIndexGetExpr& expr) {

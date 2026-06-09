@@ -180,15 +180,23 @@ void Debugger::next() {
 
 void Debugger::continueRun() {
 	// 블록·루프·함수 내부(depth > 0) stmt에서도 브레이크포인트를 검사한다.
+	// breakpoint에서 step/next를 받으면 stepping=true로 전환해, 이후 중첩 stmt마다 멈춘다
+	// (블록/루프 안에서 멈춘 뒤에도 다음 줄로 세밀하게 이어가도록).
 	bool subBreakHit = false;
+	bool stepping    = false;
 	interpreter_.setStmtHook([&](Stmt& stmt, int depth) {
 		if (depth == 0) return;
-		if (!breakpoints_.count(stmt.getLine())) return;
+		bool atBreakpoint = breakpoints_.count(stmt.getLine()) > 0;
+		if (!stepping && !atBreakpoint) return;  // 멈출 이유가 없으면 계속 실행
 
 		int line = stmt.getLine();
-		std::cout << lineTag(line) << " Breakpoint hit\n";
+		if (atBreakpoint && !stepping)
+			std::cout << lineTag(line) << " Breakpoint hit\n";
+		std::cout << lineTag(line) << ">> ";
 		if (line > 0 && line <= static_cast<int>(sourceLines_.size()))
-			std::cout << lineTag(line) << ">> " << sourceLines_[line - 1] << "\n";
+			std::cout << sourceLines_[line - 1] << "\n";
+		else
+			std::cout << stmtTypeName(stmt) << "\n";
 		showWatches();
 
 		std::string input;
@@ -200,13 +208,8 @@ void Debugger::continueRun() {
 				return;
 			}
 			if (handleExitInput(input)) { subBreakHit = true; return; }
-			if (input == "continue") return;  // 훅 유지, 다음 브레이크포인트까지 계속
-			if (input == "step" || input == "next") {
-				// 현재 top-level stmt 실행 완료 후 runDebugLoop로 복귀
-				interpreter_.clearStmtHook();
-				subBreakHit = true;
-				return;
-			}
+			if (input == "continue") { stepping = false; return; }            // 다음 브레이크포인트까지
+			if (input == "step" || input == "next") { stepping = true; return; }  // 다음 중첩 stmt에서 멈춤
 			auto cmd = DebugCommandParser::parse(input);
 			if (cmd) cmd->execute(*this);
 			else std::cout << "[Debugger] Breakpoint. Commands: continue | step | next | watches | inspect | exit\n";

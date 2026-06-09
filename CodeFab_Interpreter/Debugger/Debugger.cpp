@@ -184,13 +184,15 @@ void Debugger::continueRun() {
 	// (블록/루프 안에서 멈춘 뒤에도 다음 줄로 세밀하게 이어가도록).
 	bool subBreakHit = false;
 	bool stepping    = false;
+	int  nextDepth   = -1;  // step: -1(모든 depth), next: 누른 시점 depth 이하에서만 멈춤(step over)
 	interpreter_.setStmtHook([&](Stmt& stmt, int depth) {
-		if (depth == 0 && !stepping) return;  // stepping이면 최상위 문장(for/if 등)에서도 멈춤
+		bool stepPause = stepping && (nextDepth < 0 || depth <= nextDepth);
+		if (depth == 0 && !stepPause) return;  // 최상위 문장은 stepPause일 때만(브레이크포인트는 루프가 처리)
 		bool atBreakpoint = breakpoints_.count(stmt.getLine()) > 0;
-		if (!stepping && !atBreakpoint) return;  // 멈출 이유가 없으면 계속 실행
+		if (!stepPause && !atBreakpoint) return;  // 멈출 이유가 없으면 계속 실행
 
 		int line = stmt.getLine();
-		if (atBreakpoint && !stepping)
+		if (atBreakpoint && !stepPause)
 			std::cout << lineTag(line) << " Breakpoint hit\n";
 		std::cout << lineTag(line) << ">> ";
 		if (line > 0 && line <= static_cast<int>(sourceLines_.size()))
@@ -208,8 +210,9 @@ void Debugger::continueRun() {
 				return;
 			}
 			if (handleExitInput(input)) { subBreakHit = true; return; }
-			if (input == "continue") { stepping = false; return; }            // 다음 브레이크포인트까지
-			if (input == "step" || input == "next") { stepping = true; return; }  // 다음 중첩 stmt에서 멈춤
+			if (input == "continue") { stepping = false; return; }                // 다음 브레이크포인트까지
+			if (input == "step") { stepping = true; nextDepth = -1; return; }      // step into: 모든 depth에서 멈춤
+			if (input == "next") { stepping = true; nextDepth = depth; return; }   // step over: depth<=현재에서만 멈춤
 			auto cmd = DebugCommandParser::parse(input);
 			if (cmd) cmd->execute(*this);
 			else std::cout << "[Debugger] Breakpoint. Commands: continue | step | next | watches | inspect | exit\n";

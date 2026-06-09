@@ -49,6 +49,7 @@ void ReplRunner::runSource(const std::string& source) {
 
 		checker_.doCheckerRepl(stmts);
 		interpreter_.interpret(stmts);
+		stmtHistory_.push_back(std::move(stmts));
 	}
 	catch (const LexError& e) {
 		std::cerr << "[Lex Error] "     << e.what() << "\n";

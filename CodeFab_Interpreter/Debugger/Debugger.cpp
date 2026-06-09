@@ -185,7 +185,7 @@ void Debugger::continueRun() {
 	bool subBreakHit = false;
 	bool stepping    = false;
 	interpreter_.setStmtHook([&](Stmt& stmt, int depth) {
-		if (depth == 0) return;
+		if (depth == 0 && !stepping) return;  // stepping이면 최상위 문장(for/if 등)에서도 멈춤
 		bool atBreakpoint = breakpoints_.count(stmt.getLine()) > 0;
 		if (!stepping && !atBreakpoint) return;  // 멈출 이유가 없으면 계속 실행
 
